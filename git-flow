@@ -47,10 +47,10 @@ fi
 
 # The sed expression here replaces all backslashes by forward slashes.
 # This helps our Windows users, while not bothering our Unix users.
-export GITFLOW_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+export GITFLOW_DIR='/home/itm/itmsw/pasimodo/x86_64/software/gitflow'
 
 usage() {
-	echo "usage: git flow <subcommand>"
+	echo "usage: git-flow <subcommand>"
 	echo
 	echo "Available subcommands are:"
 	echo "   init      Initialize a new git repo with support for the branching model."
@@ -60,7 +60,7 @@ usage() {
 	echo "   support   Manage your support branches."
 	echo "   version   Shows version information."
 	echo
-	echo "Try 'git flow <subcommand> help' for details."
+	echo "Try 'git-flow <subcommand> help' for details."
 }
 
 main() {
@@ -79,7 +79,7 @@ main() {
 
 	# use the shFlags project to parse the command line arguments
 	. "$GITFLOW_DIR/gitflow-shFlags"
-	FLAGS_PARENT="git flow"
+	FLAGS_PARENT="git-flow"
 
   # allow user to request git action logging
   DEFINE_boolean show_commands false 'show actions taken (git commands)' g
@@ -98,7 +98,7 @@ main() {
 
 	# run command
 	. "$GITFLOW_DIR/git-flow-$SUBCOMMAND"
-	FLAGS_PARENT="git flow $SUBCOMMAND"
+	FLAGS_PARENT="git-flow $SUBCOMMAND"
 
 	# test if the first argument is a flag (i.e. starts with '-')
 	# in that case, we interpret this arg as a flag for the default

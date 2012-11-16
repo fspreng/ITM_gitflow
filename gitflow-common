@@ -260,7 +260,7 @@ require_git_repo() {
 
 require_gitflow_initialized() {
 	if ! gitflow_is_initialized; then
-		die "fatal: Not a gitflow-enabled repo yet. Please run \"git flow init\" first."
+		die "fatal: Not a gitflow-enabled repo yet. Please run \"git-flow init\" first."
 	fi
 }
 

@@ -44,15 +44,15 @@ init() {
 }
 
 usage() {
-	echo "usage: git flow feature [list] [-v]"
-	echo "       git flow feature start [-F] <name> [<base>]"
-	echo "       git flow feature finish [-rFkDS] [<name|nameprefix>]"
-	echo "       git flow feature publish <name>"
-	echo "       git flow feature track <name>"
-	echo "       git flow feature diff [<name|nameprefix>]"
-	echo "       git flow feature rebase [-i] [<name|nameprefix>]"
-	echo "       git flow feature checkout [<name|nameprefix>]"
-	echo "       git flow feature pull [-r] <remote> [<name>]"
+	echo "usage: git-flow feature [list] [-v]"
+	echo "       git-flow feature start [-F] <name> [<base>]"
+	echo "       git-flow feature finish [-rFkDS] [<name|nameprefix>]"
+	echo "       git-flow feature publish <name>"
+	echo "       git-flow feature track <name>"
+	echo "       git-flow feature diff [<name|nameprefix>]"
+	echo "       git-flow feature rebase [-i] [<name|nameprefix>]"
+	echo "       git-flow feature checkout [<name|nameprefix>]"
+	echo "       git-flow feature pull [-r] <remote> [<name>]"
 }
 
 cmd_default() {
@@ -72,7 +72,7 @@ cmd_list() {
 		warn ""
 		warn "You can start a new feature branch:"
 		warn ""
-		warn "    git flow feature start <name> [<base>]"
+		warn "    git-flow feature start <name> [<base>]"
 		warn ""
 		exit 0
 	fi
@@ -225,7 +225,7 @@ cmd_start() {
 	echo ""
 	echo "Now, start committing on your feature. When done, use:"
 	echo ""
-	echo "     git flow feature finish $NAME"
+	echo "     git-flow feature finish $NAME"
 	echo
 }
 
@@ -275,7 +275,7 @@ cmd_finish() {
 			echo "    git commit"
 			echo 
 			echo "You can then complete the finish by running it again:"
-			echo "    git flow feature finish $NAME"
+			echo "    git-flow feature finish $NAME"
 			echo
 			exit 1
 		fi
@@ -301,11 +301,11 @@ cmd_finish() {
 
 	# if the user wants to rebase, do that first
 	if flag rebase; then
-		if ! git flow feature rebase "$NAME" "$DEVELOP_BRANCH"; then
+		if ! git-flow feature rebase "$NAME" "$DEVELOP_BRANCH"; then
 			warn "Finish was aborted due to conflicts during rebase."
 			warn "Please finish the rebase manually now."
 			warn "When finished, re-run:"
-			warn "    git flow feature finish '$NAME' '$DEVELOP_BRANCH'"
+			warn "    git-flow feature finish '$NAME' '$DEVELOP_BRANCH'"
 			exit 1
 		fi
 	fi
@@ -335,7 +335,7 @@ cmd_finish() {
 		echo "    git commit"
 		echo 
 		echo "You can then complete the finish by running it again:"
-		echo "    git flow feature finish $NAME"
+		echo "    git-flow feature finish $NAME"
 		echo
 		exit 1
 	fi

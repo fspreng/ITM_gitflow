@@ -48,8 +48,8 @@ warn "note: The support subcommand is still very EXPERIMENTAL!"
 warn "note: DO NOT use it in a production situation."
 
 usage() {
-	echo "usage: git flow support [list] [-v]"
-	echo "       git flow support start [-F] <version> <base>"
+	echo "usage: git-flow support [list] [-v]"
+	echo "       git-flow support start [-F] <version> <base>"
 }
 
 cmd_default() {
@@ -69,7 +69,7 @@ cmd_list() {
                 warn ""
                 warn "You can start a new support branch:"
                 warn ""
-                warn "    git flow support start <name> <base>"
+                warn "    git-flow support start <name> <base>"
                 warn ""
 		exit 0
 	fi

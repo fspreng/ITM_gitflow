@@ -45,11 +45,11 @@ init() {
 }
 
 usage() {
-	echo "usage: git flow release [list] [-v]"
-	echo "       git flow release start [-F] <version> [<base>]"
-	echo "       git flow release finish [-FsumpkS] <version>"
-	echo "       git flow release publish <name>"
-	echo "       git flow release track <name>"
+	echo "usage: git-flow release [list] [-v]"
+	echo "       git-flow release start [-F] <version> [<base>]"
+	echo "       git-flow release finish [-FsumpkS] <version>"
+	echo "       git-flow release publish <name>"
+	echo "       git-flow release track <name>"
 }
 
 cmd_default() {
@@ -69,7 +69,7 @@ cmd_list() {
                 warn ""
                 warn "You can start a new release branch:"
                 warn ""
-                warn "    git flow release start <name> [<base>]"
+                warn "    git-flow release start <name> [<base>]"
                 warn ""
 		exit 0
 	fi
@@ -183,7 +183,7 @@ cmd_start() {
 	echo "- Start committing last-minute fixes in preparing your release"
 	echo "- When done, run:"
 	echo
-	echo "     git flow release finish '$VERSION'"
+	echo "     git-flow release finish '$VERSION'"
 	echo
 }
 

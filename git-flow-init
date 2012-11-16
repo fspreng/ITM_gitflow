@@ -37,7 +37,7 @@
 #
 
 usage() {
-	echo "usage: git flow init [-fd]"
+	echo "usage: git-flow init [-fd]"
 }
 
 parse_args() {
@@ -59,10 +59,10 @@ cmd_default() {
 		git_repo_is_headless || require_clean_working_tree
 	fi
 
-	# running git flow init on an already initialized repo is fine
+	# running git-flow init on an already initialized repo is fine
 	if gitflow_is_initialized && ! flag force; then
 		warn "Already initialized for gitflow."
-		warn "To force reinitialization, use: git flow init -f"
+		warn "To force reinitialization, use: git-flow init -f"
 		exit 0
 	fi
 
