@@ -44,12 +44,12 @@ usage() {
 cmd_default() {
 	parse_args "$@"
 	# clone new repository using standard git clone command
-	git clone -b develop $SOURCE $DESTINATION
+	git_do clone -b develop $SOURCE $DESTINATION
 	# modify acccess permissions of cloned repository
-	chmod -R o-rx $DESTINATION
+	chmod -R o-rwx $DESTINATION
 	# create a local branch called 'master' following the remote master branch
 	cd "$DESTINATION"
-	git branch --track master origin/master >/dev/null
+	git_do branch --track master origin/master >/dev/null
 	# initilize git-flow for cloned repository
 	cd ".git"
 	echo '[gitflow "branch"]' >> config

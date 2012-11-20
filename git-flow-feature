@@ -41,6 +41,7 @@ init() {
   require_gitflow_initialized
   gitflow_load_settings
   PREFIX=$(git config --get gitflow.prefix.feature)
+  REMOTE_PREFIX=$ORIGIN/$PREFIX
 }
 
 usage() {
@@ -67,7 +68,9 @@ cmd_list() {
 	local current_branch
 	local short_names
 	feature_branches=$(echo "$(git_local_branches)" | grep "^$PREFIX")
-	if [ -z "$feature_branches" ]; then
+	local remote_feature_branches
+	remote_feature_branches=$(echo "$(git_remote_branches)" | grep "^$REMOTE_PREFIX")
+	if [ -z "$feature_branches" ] && [ -z "$remote_feature_branches" ]; then
 		warn "No feature branches exist."
 		warn ""
 		warn "You can start a new feature branch:"
@@ -86,35 +89,52 @@ cmd_list() {
 		local len=${#branch}
 		width=$(max $width $len)
 	done
+	for branch in $remote_feature_branches; do
+		local len=${#branch}
+		width=$(max $width $len)
+	done
 	width=$(($width+3))
 
-	local branch
-	for branch in $short_names; do
-		local fullname=$PREFIX$branch
-		local base=$(git merge-base "$fullname" "$DEVELOP_BRANCH")
-		local develop_sha=$(git rev-parse "$DEVELOP_BRANCH")
-		local branch_sha=$(git rev-parse "$fullname")
-		if [ "$fullname" = "$current_branch" ]; then
-			printf "* "
-		else
-			printf "  "
-		fi
-		if flag verbose; then
-			printf "%-${width}s" "$branch"
-			if [ "$branch_sha" = "$develop_sha" ]; then
-				printf "(no commits yet)"
-			elif [ "$base" = "$branch_sha" ]; then
-				printf "(is behind develop, may ff)"
-			elif [ "$base" = "$develop_sha" ]; then
-				printf "(based on latest develop)"
-			else
-				printf "(may be rebased)"
-			fi
-		else
-			printf "%s" "$branch"
-		fi
+	if [ "$feature_branches" ]; then
+		printf "Local branches:"
 		echo
-	done
+		local branch
+		for branch in $short_names; do
+			local fullname=$PREFIX$branch
+			local base=$(git merge-base "$fullname" "$DEVELOP_BRANCH")
+			local develop_sha=$(git rev-parse "$DEVELOP_BRANCH")
+			local branch_sha=$(git rev-parse "$fullname")
+			if [ "$fullname" = "$current_branch" ]; then
+				printf "* "
+			else
+				printf "  "
+			fi
+			if flag verbose; then
+				printf "%-${width}s" "$branch"
+				if [ "$branch_sha" = "$develop_sha" ]; then
+					printf "(no commits yet)"
+				elif [ "$base" = "$branch_sha" ]; then
+					printf "(is behind develop, may ff)"
+				elif [ "$base" = "$develop_sha" ]; then
+					printf "(based on latest develop)"
+				else
+					printf "(may be rebased)"
+				fi
+			else
+				printf "%s" "$branch"
+			fi
+			echo
+		done
+	fi
+	if [ "$remote_feature_branches" ]; then
+		printf "Remote branches:"
+		echo
+		for branch in $remote_feature_branches; do
+			printf "  "
+			printf "%s" "remotes/$branch"
+			echo
+		done
+	fi
 }
 
 cmd_help() {
@@ -213,14 +233,17 @@ cmd_start() {
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
 
-	# create branch
+	# create the local branch and the corresponding remote branch
 	if ! git_do checkout -b "$BRANCH" "$BASE"; then
 		die "Could not create feature branch '$BRANCH'"
+	else
+		git push origin "$BRANCH"
 	fi
 
 	echo
 	echo "Summary of actions:"
-	echo "- A new branch '$BRANCH' was created, based on '$BASE'"
+	echo "- A new local branch '$BRANCH' was created, based on '$BASE'"
+	echo "- A new remote branch '$BRANCH' was created, based on the local one"
 	echo "- You are now on branch '$BRANCH'"
 	echo ""
 	echo "Now, start committing on your feature. When done, use:"
@@ -230,8 +253,8 @@ cmd_start() {
 }
 
 cmd_finish() {
-	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
-	DEFINE_boolean rebase false "rebase instead of merge" r
+	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish (always done!)" F
+	DEFINE_boolean rebase false "rebase instead of merge (remote branch will be deleted!)" r
 	DEFINE_boolean keep false "keep branch after performing finish" k
 	DEFINE_boolean force_delete false "force delete feature branch after finish" D
 	DEFINE_boolean squash false "squash feature during merge" S
@@ -272,7 +295,7 @@ cmd_finish() {
 			echo
 			echo "Merge conflicts not resolved yet, use:"
 			echo "    git mergetool"
-			echo "    git commit"
+			echo "    git-flow commit"
 			echo 
 			echo "You can then complete the finish by running it again:"
 			echo "    git-flow feature finish $NAME"
@@ -286,10 +309,10 @@ cmd_finish() {
 
 	# update local repo with remote changes first, if asked
 	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
-		if flag fetch; then
+#		if flag fetch; then
 			git_do fetch -q "$ORIGIN" "$BRANCH"
 			git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH"
-		fi
+#		fi
 	fi
 
 	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
@@ -332,7 +355,7 @@ cmd_finish() {
 		echo
 		echo "There were merge conflicts. To resolve the merge conflict manually, use:"
 		echo "    git mergetool"
-		echo "    git commit"
+		echo "    git-flow commit"
 		echo 
 		echo "You can then complete the finish by running it again:"
 		echo "    git-flow feature finish $NAME"
@@ -350,12 +373,13 @@ helper_finish_cleanup() {
 	require_clean_working_tree
 
 	# delete branch
-	if flag fetch; then
+#	if flag fetch; then
 		git_do push "$ORIGIN" ":refs/heads/$BRANCH"
-	fi
+#	fi
 	
 	
 	if noflag keep; then
+		git_do push origin ":$BRANCH"
 		if flag force_delete; then
 			git_do branch -D "$BRANCH"
 		else
@@ -368,9 +392,9 @@ helper_finish_cleanup() {
 	echo "- The feature branch '$BRANCH' was merged into '$DEVELOP_BRANCH'"
 	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
 	if flag keep; then
-		echo "- Feature branch '$BRANCH' is still available"
+		echo "- Feature branch '$BRANCH' (local and remote) is still available"
 	else
-		echo "- Feature branch '$BRANCH' has been removed"
+		echo "- Feature branch '$BRANCH' (local and remote) has been removed"
 	fi
 	echo "- You are now on branch '$DEVELOP_BRANCH'"
 	echo
@@ -399,6 +423,7 @@ cmd_publish() {
 	echo "Summary of actions:"
 	echo "- A new remote branch '$BRANCH' was created"
 	echo "- The local branch '$BRANCH' was configured to track the remote branch"
+	echo "- The old remote branch '$BRANCH' has to be deleted manually"
 	echo "- You are now on branch '$BRANCH'"
 	echo
 }
