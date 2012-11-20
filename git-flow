@@ -53,6 +53,7 @@ usage() {
 	echo "usage: git-flow <subcommand>"
 	echo
 	echo "Available subcommands are:"
+	echo "   clone     Clone an existing git repo and initialize it in a next step with respect to the server-sided branching model."
 	echo "   init      Initialize a new git repo with support for the branching model."
 	echo "   feature   Manage your feature branches."
 	echo "   release   Manage your release branches."
@@ -104,7 +105,7 @@ main() {
 	# in that case, we interpret this arg as a flag for the default
 	# command
 	SUBACTION="default"
-	if [ "$1" != "" ] && { ! echo "$1" | grep -q "^-"; } then
+	if [ "$1" != "" ] && { ! echo "$1" | grep -q "^-"; } && [ $SUBCOMMAND != "clone" ] ; then
 		SUBACTION="$1"; shift
 	fi
 	if ! type "cmd_$SUBACTION" >/dev/null 2>&1; then
@@ -114,7 +115,7 @@ main() {
 	fi
 
 	# run the specified action
-  if [ $SUBACTION != "help" ] && [ $SUBCOMMAND != "init" ] ; then
+  if [ $SUBACTION != "help" ] && [ $SUBCOMMAND != "init" ] && [ $SUBCOMMAND != "clone" ] ; then
     init
   fi
   cmd_$SUBACTION "$@"

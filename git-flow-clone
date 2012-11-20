@@ -1,0 +1,79 @@
+#
+# git-flow -- A collection of Git extensions to provide high-level
+# repository operations for Vincent Driessen's branching model.
+#
+# Original blog post presenting this model is found at:
+#    http://nvie.com/git-model
+#
+# Feel free to contribute to this project at:
+#    http://github.com/nvie/gitflow
+#
+# Copyright 2010 Vincent Driessen. All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+#    1. Redistributions of source code must retain the above copyright notice,
+#       this list of conditions and the following disclaimer.
+# 
+#    2. Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED BY VINCENT DRIESSEN ``AS IS'' AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL VINCENT DRIESSEN OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# The views and conclusions contained in the software and documentation are
+# those of the authors and should not be interpreted as representing official
+# policies, either expressed or implied, of Vincent Driessen.
+#
+
+usage() {
+	echo "usage: git-flow clone <path to reference repository> <path to destination folder>"
+	echo "       see the git clone man page for further information"
+}
+
+cmd_default() {
+	parse_args "$@"
+	# clone new repository using standard git clone command
+	git clone -b develop $SOURCE $DESTINATION
+	# modify acccess permissions of cloned repository
+	chmod -R o-rx $DESTINATION
+	# create a local branch called 'master' following the remote master branch
+	cd "$DESTINATION"
+	git branch --track master origin/master >/dev/null
+	# initilize git-flow for cloned repository
+	cd ".git"
+	echo '[gitflow "branch"]' >> config
+	echo '	master = master' >> config
+	echo '	develop = develop' >> config
+	echo '[gitflow "prefix"]' >> config
+	echo '	feature = feature/' >> config
+	echo '	release = release/' >> config
+	echo '	hotfix = hotfix/' >> config
+	echo '	support = support/' >> config
+	echo '	versiontag = v' >> config
+}
+
+cmd_help() {
+	usage
+	exit 0
+}
+
+parse_args() {
+	# parse options
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+
+	# read arguments into global variables
+	SOURCE=$1
+	DESTINATION=$2
+}
