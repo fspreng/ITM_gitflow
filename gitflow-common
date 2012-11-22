@@ -1,3 +1,4 @@
+
 #
 # git-flow -- A collection of Git extensions to provide high-level
 # repository operations for Vincent Driessen's branching model.
@@ -52,6 +53,10 @@ escape() {
 has() {
 	local item=$1; shift
 	echo " $@ " | grep -q " $(escape $item) "
+}
+has_like() {
+	local item=$1; shift
+	echo " $@ " | grep -q "$(escape $item)"
 }
 
 # basic math
@@ -302,9 +307,42 @@ require_branch_absent() {
 require_tag_absent() {
 	for tag in $(git_all_tags); do
 		if [ "$1" = "$tag" ]; then
-			die "Tag '$1' already exists. Pick another name."
+#			die "Tag '$1' already exists. Pick another name."
+			nextdot=$(expr index "$1" .)
+			local prefix
+			prefix=${1:0: nextdot+1}
+			local last=0
+			local tag
+			for tag in $(git_do for-each-ref refs/tags/ --format='%(refname)'); do
+				if { echo "$tag" | grep -q "$prefix"; } then
+					local len
+					let len=8+${#1}+1
+					local shorttag
+					shorttag=${tag:len}
+					local nextdot
+					nextdot=$(expr index "$shorttag" .)
+					if [[ "$nextdot" > 0 ]]; then
+						((nextdot-=1))
+						shorttag=${shorttag:0:nextdot}
+					fi
+					last=$shorttag
+				fi
+			done
+			die "A newer hotfix with tag $last is already available. Subhotfix branches are not supported."
 		fi
 	done
+}
+
+require_tag_existing() {
+	local found=0
+	for tag in $(git_all_tags); do
+		if [ "$1" = "$tag" ]; then
+			found=1
+		fi
+	done
+	if [ "$found" = 0 ]; then
+		die "Tag '$1' does not exist. Check the tag of the released version you want to fix."
+	fi
 }
 
 require_branches_equal() {

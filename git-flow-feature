@@ -96,7 +96,7 @@ cmd_list() {
 	width=$(($width+3))
 
 	if [ "$feature_branches" ]; then
-		printf "Local branches:"
+		printf "Local feature branches:"
 		echo
 		local branch
 		for branch in $short_names; do
@@ -127,7 +127,7 @@ cmd_list() {
 		done
 	fi
 	if [ "$remote_feature_branches" ]; then
-		printf "Remote branches:"
+		printf "Remote feature branches:"
 		echo
 		for branch in $remote_feature_branches; do
 			printf "  "
@@ -224,7 +224,7 @@ cmd_start() {
 
 	# update the local repo with remote changes, if asked
 	if flag fetch; then
-		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH"
+		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1
 	fi
 
 	# if the origin branch counterpart exists, assert that the local branch
@@ -234,10 +234,10 @@ cmd_start() {
 	fi
 
 	# create the local branch and the corresponding remote branch
-	if ! git_do checkout -b "$BRANCH" "$BASE"; then
+	if ! git_do checkout -b "$BRANCH" "$BASE" >/dev/null 2>&1; then
 		die "Could not create feature branch '$BRANCH'"
 	else
-		git push origin "$BRANCH"
+		git_do push origin "$BRANCH" >/dev/null 2>&1
 	fi
 
 	echo
@@ -253,7 +253,7 @@ cmd_start() {
 }
 
 cmd_finish() {
-	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish (always done!)" F
+	DEFINE_boolean fetch true "fetch from remote branches before performing finish" F
 	DEFINE_boolean rebase false "rebase instead of merge (remote branch will be deleted!)" r
 	DEFINE_boolean keep false "keep branch after performing finish" k
 	DEFINE_boolean force_delete false "force delete feature branch after finish" D
@@ -309,10 +309,10 @@ cmd_finish() {
 
 	# update local repo with remote changes first, if asked
 	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
-#		if flag fetch; then
-			git_do fetch -q "$ORIGIN" "$BRANCH"
-			git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH"
-#		fi
+		if flag fetch; then
+			git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1
+			git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1
+		fi
 	fi
 
 	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
@@ -334,16 +334,16 @@ cmd_finish() {
 	fi
 
 	# merge into BASE
-	git_do checkout "$DEVELOP_BRANCH"
+	git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1
 	if [ "$(git rev-list -n2 "$DEVELOP_BRANCH..$BRANCH" | wc -l)" -eq 1 ]; then
-		git_do merge --ff "$BRANCH"
+		git_do merge --ff "$BRANCH" >/dev/null 2>&1
 	else
 		if noflag squash; then
-		    git_do merge --no-ff "$BRANCH"
+		    git_do merge --no-ff "$BRANCH" >/dev/null 2>&1
 		else
-			git_do merge --squash "$BRANCH"
-			git_do commit
-			git_do merge "$BRANCH"
+			git_do merge --squash "$BRANCH" >/dev/null 2>&1
+			git_do commit >/dev/null 2>&1
+			git_do merge "$BRANCH" >/dev/null 2>&1
 		fi
 	fi
 
@@ -374,16 +374,16 @@ helper_finish_cleanup() {
 
 	# delete branch
 #	if flag fetch; then
-		git_do push "$ORIGIN" ":refs/heads/$BRANCH"
+		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
 #	fi
 	
 	
 	if noflag keep; then
-		git_do push origin ":$BRANCH"
+		git_do push origin ":$BRANCH" >/dev/null 2>&1
 		if flag force_delete; then
-			git_do branch -D "$BRANCH"
+			git_do branch -D "$BRANCH" >/dev/null 2>&1
 		else
-			git_do branch -d "$BRANCH"
+			git_do branch -d "$BRANCH" >/dev/null 2>&1
 		fi
 	fi
 
