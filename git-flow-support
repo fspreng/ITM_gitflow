@@ -40,16 +40,16 @@ init() {
   require_git_repo
   require_gitflow_initialized
   gitflow_load_settings
-  VERSION_PREFIX=$(eval "echo `git config --get gitflow.prefix.versiontag`")
   PREFIX=$(git config --get gitflow.prefix.support)
+  REMOTE_PREFIX=$ORIGIN/$PREFIX
 }
 
-warn "note: The support subcommand is still very EXPERIMENTAL!"
-warn "note: DO NOT use it in a production situation."
+#warn "note: The support subcommand is still very EXPERIMENTAL!"
+#warn "note: DO NOT use it in a production situation."
 
 usage() {
 	echo "usage: git-flow support [list] [-v]"
-	echo "       git-flow support start [-F] <version> <base>"
+	echo "       git-flow support start [-F] <name> <base>"
 }
 
 cmd_default() {
@@ -64,7 +64,9 @@ cmd_list() {
 	local current_branch
 	local short_names
 	support_branches=$(echo "$(git_local_branches)" | grep "^$PREFIX")
-	if [ -z "$support_branches" ]; then
+	local remote_support_branches
+	remote_support_branches=$(echo "$(git_remote_branches)" | grep "^$REMOTE_PREFIX")
+	if [ -z "$support_branches" ] && [ -z "$remote_support_branches" ]; then
 		warn "No support branches exist."
                 warn ""
                 warn "You can start a new support branch:"
@@ -83,38 +85,55 @@ cmd_list() {
 		local len=${#branch}
 		width=$(max $width $len)
 	done
+	for branch in $remote_support_branches; do
+		local len=${#branch}
+		width=$(max $width $len)
+	done
 	width=$(($width+3))
 
-	local branch
-	for branch in $short_names; do
-		local fullname=$PREFIX$branch
-		local base=$(git merge-base "$fullname" "$MASTER_BRANCH")
-		local master_sha=$(git rev-parse "$MASTER_BRANCH")
-		local branch_sha=$(git rev-parse "$fullname")
-		if [ "$fullname" = "$current_branch" ]; then
-			printf "* "
-		else
-			printf "  "
-		fi
-		if flag verbose; then
-			printf "%-${width}s" "$branch"
-			if [ "$branch_sha" = "$master_sha" ]; then
-				printf "(no commits yet)"
-			else
-				local tagname=$(git name-rev --tags --no-undefined --name-only "$base")
-				local nicename
-				if [ "$tagname" != "" ]; then
-					nicename=$tagname
-				else
-					nicename=$(git rev-parse --short "$base")
-				fi
-				printf "(based on $nicename)"
-			fi
-		else
-			printf "%s" "$branch"
-		fi
+	if [ "$support_branches" ]; then
+		printf "Local support branches:"
 		echo
-	done
+		local branch
+		for branch in $short_names; do
+			local fullname=$PREFIX$branch
+			local base=$(git merge-base "$fullname" "$DEVELOP_BRANCH")
+			local develop_sha=$(git rev-parse "$DEVELOP_BRANCH")
+			local branch_sha=$(git rev-parse "$fullname")
+			if [ "$fullname" = "$current_branch" ]; then
+				printf "* "
+			else
+				printf "  "
+			fi
+			if flag verbose; then
+				printf "%-${width}s" "$branch"
+				if [ "$branch_sha" = "$develop_sha" ]; then
+					printf "(no commits yet)"
+				else
+					local tagname=$(git name-rev --tags --no-undefined --name-only "$base")
+					local nicename
+					if [ "$tagname" != "" ]; then
+						nicename=$tagname
+					else
+						nicename=$(git rev-parse --short "$base")
+					fi
+					printf "(based on $nicename)"
+				fi
+			else
+				printf "%s" "$PREFIX$branch"
+			fi
+			echo
+		done
+	fi
+	if [ "$remote_support_branches" ]; then
+		printf "Remote support branches:"
+		echo
+		for branch in $remote_support_branches; do
+			printf "  "
+			printf "%s" "remotes/$branch"
+			echo
+		done
+	fi
 }
 
 cmd_help() {
@@ -135,7 +154,7 @@ parse_args() {
 
 require_version_arg() {
 	if [ "$VERSION" = "" ]; then
-		warn "Missing argument <version>"
+		warn "Missing argument <name>"
 		usage
 		exit 1
 	fi
@@ -158,27 +177,40 @@ require_base_is_on_master() {
 }
 
 cmd_start() {
-	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
+	DEFINE_boolean fetch false "fetch from $ORIGIN before performing local operation" F
 	parse_args "$@"
 	require_version_arg
 	require_base_arg
-	require_base_is_on_master
+#	require_base_is_on_master
 
 	# sanity checks
 	require_clean_working_tree
 
-	# fetch remote changes
+	# update the local repo with remote changes, if asked
 	if flag fetch; then
-		git_do fetch -q "$ORIGIN" "$BASE"
+		git_do fetch -q "$ORIGIN" "$BASE" >/dev/null 2>&1
 	fi
 	require_branch_absent "$BRANCH"
 
-	# create branch
-	git_do checkout -b "$BRANCH" "$BASE"
+	# if the origin branch counterpart exists, assert that the local branch
+	# isn't behind it (to avoid unnecessary rebasing)
+	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
+		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+	fi
+
+	# create the local branch and the corresponding remote branch
+	if ! git_do checkout -b "$BRANCH" "$BASE" >/dev/null 2>&1; then
+		die "Could not create feature branch '$BRANCH'"
+	else
+		git_do push origin "$BRANCH" >/dev/null 2>&1
+	fi
 
 	echo
 	echo "Summary of actions:"
 	echo "- A new branch '$BRANCH' was created, based on '$BASE'"
+	echo "- A new remote branch '$BRANCH' was created, based on the local one"
 	echo "- You are now on branch '$BRANCH'"
+	echo
+	echo "Now, start committing on the support version."
 	echo
 }

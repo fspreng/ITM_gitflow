@@ -214,7 +214,7 @@ parse_remote_name() {
 }
 
 cmd_start() {
-	DEFINE_boolean fetch false 'fetch from origin before performing local operation' F
+	DEFINE_boolean fetch false 'fetch from $ORIGIN before performing local operation' F
 	parse_args "$@"
 	BASE=${2:-$DEVELOP_BRANCH}
 	require_name_arg
