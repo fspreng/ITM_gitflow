@@ -121,7 +121,7 @@ cmd_list() {
 					printf "(may be rebased)"
 				fi
 			else
-				printf "%s" "$branch"
+				printf "%s" "$PREFIX$branch"
 			fi
 			echo
 		done

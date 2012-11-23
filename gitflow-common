@@ -321,7 +321,7 @@ require_tag_absent() {
 					shorttag=${tag:len}
 					local nextdot
 					nextdot=$(expr index "$shorttag" .)
-					if [[ "$nextdot" > 0 ]]; then
+					if [[ "$nextdot" -gt 0 ]]; then
 						((nextdot-=1))
 						shorttag=${shorttag:0:nextdot}
 					fi
