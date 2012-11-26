@@ -48,6 +48,7 @@ usage() {
 	echo "usage: git-flow feature [list] [-v]"
 	echo "       git-flow feature start [-F] <name> [<base>]"
 	echo "       git-flow feature finish [-rFkDS] [<name|nameprefix>]"
+	echo "       git-flow feature delete [-l] <name>"
 	echo "       git-flow feature publish <name>"
 	echo "       git-flow feature track <name>"
 	echo "       git-flow feature diff [<name|nameprefix>]"
@@ -372,12 +373,15 @@ helper_finish_cleanup() {
 	require_branch "$BRANCH"
 	require_clean_working_tree
 
+	# push branches to origin
+	if flag fetch; then
+		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1 || \
+		  die "Could not push to $BRANCH from $ORIGIN."
+		git_do push "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+		  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
+	fi
+	
 	# delete branch
-#	if flag fetch; then
-		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
-#	fi
-	
-	
 	if noflag keep; then
 		git_do push origin ":$BRANCH" >/dev/null 2>&1
 		if flag force_delete; then
@@ -400,6 +404,35 @@ helper_finish_cleanup() {
 	echo
 }
 
+cmd_delete() {
+	DEFINE_boolean local false "only delete the local branch" l
+	parse_args "$@"
+
+	# sanity checks
+	require_branch "$BRANCH"
+
+	# change to branch develop
+	git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+	  die "Could not check out $DEVELOP_BRANCH."
+
+	# delete local branch
+	git_do branch -d "$BRANCH" >/dev/null 2>&1
+
+	if ! flag local; then
+		# delete remote branch
+		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
+	fi
+
+	echo
+	echo "Summary of actions:"
+	echo "- The local branch '$BRANCH' has been deleted"
+	if ! flag local; then
+		echo "- The remote branch '$ORIGIN/$BRANCH' has been deleted"
+	fi
+	echo "- You are now on branch '$DEVELOP_BRANCH'"
+	echo
+}
+
 cmd_publish() {
 	parse_args "$@"
 	expand_nameprefix_arg
@@ -407,17 +440,17 @@ cmd_publish() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch "$BRANCH"
-	git_do fetch -q "$ORIGIN"
+	git_do fetch -q "$ORIGIN" >/dev/null 2>&1
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	# create remote branch
-	git_do push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
-	git_do fetch -q "$ORIGIN"
+	git_do push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH" >/dev/null 2>&1
+	git_do fetch -q "$ORIGIN" >/dev/null 2>&1
 
 	# configure remote tracking
-	git_do config "branch.$BRANCH.remote" "$ORIGIN"
-	git_do config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
-	git_do checkout "$BRANCH"
+	git_do config "branch.$BRANCH.remote" "$ORIGIN" >/dev/null 2>&1
+	git_do config "branch.$BRANCH.merge" "refs/heads/$BRANCH" >/dev/null 2>&1
+	git_do checkout "$BRANCH" >/dev/null 2>&1
 
 	echo
 	echo "Summary of actions:"
@@ -435,11 +468,11 @@ cmd_track() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch_absent "$BRANCH"
-	git_do fetch -q "$ORIGIN"
+	git_do fetch -q "$ORIGIN"  >/dev/null 2>&1
 	require_branch "$ORIGIN/$BRANCH"
 
 	# create tracking branch
-	git_do checkout -b "$BRANCH" "$ORIGIN/$BRANCH"
+	git_do checkout -b "$BRANCH" "$ORIGIN/$BRANCH" >/dev/null 2>&1
 
 	echo
 	echo "Summary of actions:"

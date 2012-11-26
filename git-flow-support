@@ -50,6 +50,7 @@ init() {
 usage() {
 	echo "usage: git-flow support [list] [-v]"
 	echo "       git-flow support start [-F] <name> <base>"
+	echo "       git-flow feature delete [-l] <name>"
 }
 
 cmd_default() {
@@ -212,5 +213,34 @@ cmd_start() {
 	echo "- You are now on branch '$BRANCH'"
 	echo
 	echo "Now, start committing on the support version."
+	echo
+}
+
+cmd_delete() {
+	DEFINE_boolean local false "only delete the local branch" l
+	parse_args "$@"
+
+	# sanity checks
+	require_branch "$BRANCH"
+
+	# change to branch develop
+	git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+	  die "Could not check out $DEVELOP_BRANCH."
+
+	# delete local branch
+	git_do branch -d "$BRANCH" >/dev/null 2>&1
+
+	if ! flag local; then
+		# delete remote branch
+		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
+	fi
+
+	echo
+	echo "Summary of actions:"
+	echo "- The local branch '$BRANCH' has been deleted"
+	if ! flag local; then
+		echo "- The remote branch '$ORIGIN/$BRANCH' has been deleted"
+	fi
+	echo "- You are now on branch '$DEVELOP_BRANCH'"
 	echo
 }

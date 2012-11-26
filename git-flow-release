@@ -49,6 +49,7 @@ usage() {
 	echo "usage: git-flow release [list] [-v]"
 	echo "       git-flow release start [-F] <major/minor> [<base>]"
 	echo "       git-flow release finish [-FsumpkSo] <version>"
+	echo "       git-flow feature delete [-l] <name>"
 	echo "       git-flow release publish <name>"
 	echo "       git-flow release track <name>"
 }
@@ -197,6 +198,9 @@ require_major_minor_arg() {
 					((nextdot-=1))
 					local fronttag=${shorttag:0:nextdot}
 					if [ "$fronttag" -ge "$majortag" ]; then
+						if [ "$fronttag" -gt "$majortag" ]; then
+							minortag=0
+						fi
 						majortag=$fronttag
 						shorttag=${shorttag: ((nextdot+=1))}
 						nextdot=$(expr index "$shorttag" .)
@@ -430,17 +434,17 @@ cmd_publish() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch "$BRANCH"
-	git_do fetch -q "$ORIGIN"
+	git_do fetch -q "$ORIGIN" >/dev/null 2>&1
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	# create remote branch
-	git_do push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
-	git_do fetch -q "$ORIGIN"
+	git_do push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH" >/dev/null 2>&1
+	git_do fetch -q "$ORIGIN" >/dev/null 2>&1
 
 	# configure remote tracking
-	git_do config "branch.$BRANCH.remote" "$ORIGIN"
-	git_do config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
-	git_do checkout "$BRANCH"
+	git_do config "branch.$BRANCH.remote" "$ORIGIN" >/dev/null 2>&1
+	git_do config "branch.$BRANCH.merge" "refs/heads/$BRANCH" >/dev/null 2>&1
+	git_do checkout "$BRANCH" >/dev/null 2>&1
 
 	echo
 	echo "Summary of actions:"
@@ -458,15 +462,44 @@ cmd_track() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch_absent "$BRANCH"
-	git_do fetch -q "$ORIGIN"
+	git_do fetch -q "$ORIGIN" >/dev/null 2>&1
 	require_branch "$ORIGIN/$BRANCH"
 
 	# create tracking branch
-	git_do checkout -b "$BRANCH" "$ORIGIN/$BRANCH"
+	git_do checkout -b "$BRANCH" "$ORIGIN/$BRANCH" >/dev/null 2>&1
 
 	echo
 	echo "Summary of actions:"
 	echo "- A new remote tracking branch '$BRANCH' was created"
 	echo "- You are now on branch '$BRANCH'"
+	echo
+}
+
+cmd_delete() {
+	DEFINE_boolean local false "only delete the local branch" l
+	parse_args "$@"
+
+	# sanity checks
+	require_branch "$BRANCH"
+
+	# change to branch develop
+	git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+	  die "Could not check out $DEVELOP_BRANCH."
+
+	# delete local branch
+	git_do branch -d "$BRANCH" >/dev/null 2>&1
+
+	if ! flag local; then
+		# delete remote branch
+		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
+	fi
+
+	echo
+	echo "Summary of actions:"
+	echo "- The local branch '$BRANCH' has been deleted"
+	if ! flag local; then
+		echo "- The remote branch '$ORIGIN/$BRANCH' has been deleted"
+	fi
+	echo "- You are now on branch '$DEVELOP_BRANCH'"
 	echo
 }

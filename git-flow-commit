@@ -36,64 +36,50 @@
 # policies, either expressed or implied, of Vincent Driessen.
 #
 
+init() {
+  require_git_repo
+  require_gitflow_initialized
+  gitflow_load_settings
+  BRANCH=$(git_do branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g')
+}
+
 usage() {
-	echo "usage: git-flow clone <path to reference repository> <path to destination folder>"
-	echo "       see the git clone man page for further information"
+#	echo "usage: git-flow commit <commit_message>"
+	echo "usage: git-flow commit <arguments>"
+	echo "       see the git commit man page for further information"
 }
 
-require_source_arg() {
-	if [ "$SOURCE" = "" ]; then
-		warn "Missing argument <path to reference repository>"
-		usage
-		exit 1
-	fi
-}
-
-require_destination_arg() {
-	if [ "$DESTINATION" = "" ]; then
-		warn "Missing argument <path to destination folder>"
+require_message_arg() {
+	if [ "$MESSAGE" = "" ]; then
+		warn "Missing argument <commit_message>"
 		usage
 		exit 1
 	fi
 }
 
 cmd_default() {
-	parse_args "$@"
-	require_source_arg
-	require_destination_arg
-	# clone new repository using standard git clone command
-	git_do clone -b develop $SOURCE $DESTINATION || \
-	  die "Could not clone git repository '$SOURCE' into '$DESTINATION'."
-	# modify acccess permissions of cloned repository
-	if [ "$DESTINATION" = "." ]; then
-		DESTINATION=$PWD
-	fi
-	chmod -R o-rwx $DESTINATION
-	# initialize git-flow for cloned repository
-	cd "$DESTINATION/.git"
-	echo '[gitflow "branch"]' >> config
-	echo '	master = master' >> config
-	echo '	develop = develop' >> config
-	echo '[gitflow "prefix"]' >> config
-	echo '	feature = feature/' >> config
-	echo '	release = release/' >> config
-	echo '	hotfix = hotfix/' >> config
-	echo '	support = support/' >> config
-	echo '	versiontag = v' >> config
-	# create the local master branch following the remote master
-	gitflow_load_settings
-	git_do branch --track $MASTER_BRANCH $ORIGIN/$MASTER_BRANCH >/dev/null 2>&1 || \
-	  die "Could not create a local branch '$MASTER_BRANCH', based on the remote branch '$MASTER_BRANCH' from '$ORIGIN'."
+#	parse_args "$@"
+#	require_message_arg
+	if ! git_is_clean_working_tree; then
+		# record changes to the local and the remote repository
+#		git_do commit -a -m "$MESSAGE" >/dev/null 2>&1 || \
+		git_do commit "$@" >/dev/null 2>&1 || \
+		  die "Could not commit changes to local repository $BRANCH."
+		git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
+		  die "Could not fetch $BRANCH from $ORIGIN."
+		git_do push origin "$BRANCH" >/dev/null 2>&1 || \
+		  die "Could not push to $BRANCH from $ORIGIN."
 
-	echo
-	echo "Summary of actions:"
-	echo "- A new git repository '$DESTINATION' was created, based on '$SOURCE'"
-	echo "- Access to the git repository '$DESTINATION' has been restricted for group 'others'"
-	echo "- Local branches '$MASTER_BRANCH' and '$DEVELOP_BRANCH' have been created following the corresponding branches from '$ORIGIN'"
-	echo "- Gitflow has been initialized for the cloned repository"
-	echo
-	echo "Now, you can start working. Have fun!"
-	echo
+		echo
+		echo "Summary of actions:"
+		echo "- Latest objects have been fetched from '$ORIGIN'"
+		echo "- Changes have been committed to the local and the remote branch '$BRANCH'"
+		echo  
+	else
+		echo
+		echo "There are no changes to be committed."
+		echo
+	fi
 }
 
 cmd_help() {
@@ -107,6 +93,5 @@ parse_args() {
 	eval set -- "${FLAGS_ARGV}"
 
 	# read arguments into global variables
-	SOURCE=$1
-	DESTINATION=$2
+	MESSAGE=$1
 }
