@@ -55,6 +55,7 @@ usage() {
 	echo "       git-flow feature rebase [-i] [<name|nameprefix>]"
 	echo "       git-flow feature checkout [<name|nameprefix>]"
 	echo "       git-flow feature pull [-r] <remote> [<name>]"
+	echo "       git-flow feature update <name> [<base>]"
 }
 
 cmd_default() {
@@ -585,4 +586,38 @@ cmd_pull() {
 		git_do checkout -q "$BRANCH" || die "Checking out new local branch failed."
 		echo "Created local branch $BRANCH based on $REMOTE's $BRANCH."
 	fi
+}
+
+cmd_update() {
+	parse_args "$@"
+	require_name_arg
+
+	# sanity checks
+	require_clean_working_tree
+	if [ "$2" = "" ]; then
+		base="$DEVELOP_BRANCH"
+	else
+		base="$2"
+	fi
+	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
+	  die "Could not fetch $BRANCH from $ORIGIN."
+	require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+	git_do fetch -q "$ORIGIN" "$base" >/dev/null 2>&1 || \
+	  die "Could not fetch $base from $ORIGIN."
+	require_branches_equal "$base" "$ORIGIN/$base"
+	if ! git_is_branch_merged_into "$BRANCH" "$base"; then
+		git_do checkout "$BRANCH" >/dev/null 2>&1 || \
+		  die "Could not check out $BRANCH."
+		git_do merge --no-ff "$base" >/dev/null 2>&1 || \
+		  die "There were merge conflicts. Fix them!"
+		  # TODO: What do we do now?
+		git_do push origin "$BRANCH" >/dev/null 2>&1 || \
+		  die "Could not push to $BRANCH from $ORIGIN."
+	fi
+
+	echo
+	echo "Summary of actions:"
+	echo "- The latest version of branch '$base' was merged into '$BRANCH'"
+	echo "- You are now on branch '$BRANCH'"
+	echo
 }

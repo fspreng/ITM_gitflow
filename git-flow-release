@@ -48,7 +48,7 @@ init() {
 usage() {
 	echo "usage: git-flow release [list] [-v]"
 	echo "       git-flow release start [-F] <major/minor> [<base>]"
-	echo "       git-flow release finish [-FsumpkSo] <version>"
+	echo "       git-flow release finish [-FsumpkSo] <name>"
 	echo "       git-flow feature delete [-l] <name>"
 	echo "       git-flow release publish <name>"
 	echo "       git-flow release track <name>"

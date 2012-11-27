@@ -50,7 +50,7 @@ init() {
 usage() {
 	echo "usage: git-flow support [list] [-v]"
 	echo "       git-flow support start [-F] <name> <base>"
-	echo "       git-flow feature delete [-l] <name>"
+	echo "       git-flow support delete [-l] <name>"
 }
 
 cmd_default() {

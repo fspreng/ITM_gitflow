@@ -48,10 +48,10 @@ init() {
 usage() {
 	echo "usage: git-flow hotfix [list] [-v]"
 	echo "       git-flow hotfix start [-F] <version> [<base>]"
-	echo "       git-flow hotfix finish [-Fsumfpknod] <version>"
-	echo "       git-flow hotfix delete [-l] <version>"
-	echo "       git-flow hotfix publish <version>"
-	echo "       git-flow hotfix track <version>"
+	echo "       git-flow hotfix finish [-Fsumfpknod] <name>"
+	echo "       git-flow hotfix delete [-l] <name>"
+	echo "       git-flow hotfix publish <name>"
+	echo "       git-flow hotfix track <name>"
 }
 
 cmd_default() {
