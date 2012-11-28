@@ -223,16 +223,17 @@ cmd_start() {
 
 	# sanity checks
 	require_branch_absent "$BRANCH"
+	require_branch_absent "$ORIGIN/$BRANCH"
 
 	# update the local repo with remote changes, if asked
 	if flag fetch; then
-		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1
+		git_do fetch -q "$ORIGIN" "$BASE" >/dev/null 2>&1
 	fi
 
 	# if the origin branch counterpart exists, assert that the local branch
 	# isn't behind it (to avoid unnecessary rebasing)
-	if git_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
-		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
+	if git_branch_exists "$ORIGIN/$BASE"; then
+		require_branches_equal "$BASE" "$ORIGIN/$BASE"
 	fi
 
 	# create the local branch and the corresponding remote branch
