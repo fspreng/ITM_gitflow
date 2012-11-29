@@ -303,6 +303,7 @@ cmd_finish() {
 
 	# sanity checks
 	require_branch "$BRANCH"
+	require_branch "$ORIGIN/$BRANCH"
 	require_clean_working_tree
 	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
 		if flag fetch; then

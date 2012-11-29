@@ -266,6 +266,7 @@ cmd_finish() {
 
 	# sanity checks
 	require_branch "$BRANCH"
+	require_branch "$ORIGIN/$BRANCH"
 
 	# detect if we're restoring from a merge conflict
 	if [ -f "$DOT_GIT_DIR/.gitflow/MERGE_BASE" ]; then
