@@ -343,7 +343,18 @@ require_tag_existing() {
 		fi
 	done
 	if [ "$found" = 0 ]; then
-		die "Tag '$1' does not exist. Check the tag of the released version you want to fix."
+		local nextdot
+		nextdot=$(expr index "$1" .)
+		local prefix
+		prefix=${1:0: nextdot+1}
+		local suffix
+		suffix=${1:nextdot}
+		nextdot=$(expr index "$suffix" .)
+		local last
+		last=${suffix:nextdot}
+		((oldlast=last-1))
+		old_version=$prefix.$oldlast
+		die "Tag '$old_version' does not exist. Check the tag of the released version you want to fix."
 	fi
 }
 
