@@ -236,6 +236,14 @@ require_no_existing_release_branches() {
 		die "There is an existing release branch ($first_branch). Finish that one first."
 }
 
+require_no_existing_remote_release_branches() {
+	local release_branches=$(echo "$(git_remote_branches)" | grep "^$ORIGIN/$PREFIX")
+	local first_branch=$(echo ${release_branches} | head -n1)
+	first_branch=${first_branch#$PREFIX}
+	[ -z "$release_branches" ] || \
+		die "There is an existing release branch ($first_branch). Finish that one first."
+}
+
 cmd_start() {
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	parse_args "$@"
@@ -250,7 +258,8 @@ cmd_start() {
 	require_branch_absent "$BRANCH"
 	git_do remote update >/dev/null 2>&1 || \
 	  die "Could not update remote branches from $ORIGIN."
-	require_branch_absent "$ORIGIN/$BRANCH"
+	require_no_existing_remote_release_branches
+#	require_branch_absent "$ORIGIN/$BRANCH"
 	require_tag_absent "$VERSION_PREFIX$VERSION"
 	if flag fetch; then
 		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1
