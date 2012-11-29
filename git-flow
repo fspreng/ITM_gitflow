@@ -61,6 +61,7 @@ usage() {
 	echo "   hotfix    Manage your hotfix branches."
 	echo "   support   Manage your support branches."
 	echo "   commit    Record changes to the local and the remote repository."
+	echo "   reset     Reset current HEAD of the local and the remote repository to the specified state."
 	echo "   version   Shows version information."
 	echo
 	echo "Try '$gitflow_command <subcommand> help' for details."
@@ -107,7 +108,7 @@ main() {
 	# in that case, we interpret this arg as a flag for the default
 	# command
 	SUBACTION="default"
-	if [ "$1" != "" ] && { ! echo "$1" | grep -q "^-"; } && [ $SUBCOMMAND != "clone" ] && [ $SUBCOMMAND != "commit" ] ; then
+	if [ "$1" != "" ] && { ! echo "$1" | grep -q "^-"; } && [ $SUBCOMMAND != "clone" ] && [ $SUBCOMMAND != "commit" ] && [ $SUBCOMMAND != "reset" ] ; then
 		SUBACTION="$1"; shift
 	fi
 	if ! type "cmd_$SUBACTION" >/dev/null 2>&1; then
