@@ -248,6 +248,8 @@ cmd_start() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch_absent "$BRANCH"
+	git_do remote update >/dev/null 2>&1 || \
+	  die "Could not update remote branches from $ORIGIN."
 	require_branch_absent "$ORIGIN/$BRANCH"
 	require_tag_absent "$VERSION_PREFIX$VERSION"
 	if flag fetch; then
@@ -303,6 +305,8 @@ cmd_finish() {
 
 	# sanity checks
 	require_branch "$BRANCH"
+	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
+	  die "Could not fetch $BRANCH from $ORIGIN."
 	require_branch "$ORIGIN/$BRANCH"
 	require_clean_working_tree
 	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then

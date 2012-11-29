@@ -223,6 +223,8 @@ cmd_start() {
 
 	# sanity checks
 	require_branch_absent "$BRANCH"
+	git_do remote update >/dev/null 2>&1 || \
+	  die "Could not update remote branches from $ORIGIN."
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	# update the local repo with remote changes, if asked
@@ -266,6 +268,8 @@ cmd_finish() {
 
 	# sanity checks
 	require_branch "$BRANCH"
+	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
+	  die "Could not fetch $BRANCH from $ORIGIN."
 	require_branch "$ORIGIN/$BRANCH"
 
 	# detect if we're restoring from a merge conflict
@@ -471,7 +475,8 @@ cmd_track() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch_absent "$BRANCH"
-	git_do fetch -q "$ORIGIN"  >/dev/null 2>&1
+	git_do fetch -q "$ORIGIN"  >/dev/null 2>&1 || \
+	  die "Could not fetch from $ORIGIN."
 	require_branch "$ORIGIN/$BRANCH"
 
 	# create tracking branch
