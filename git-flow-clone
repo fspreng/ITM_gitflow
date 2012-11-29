@@ -37,7 +37,7 @@
 #
 
 usage() {
-	echo "usage: git-flow clone <path to reference repository> <path to destination folder>"
+	echo "usage: $(git config --get gitflow.prefix.command) clone <path to reference repository> <path to destination folder>"
 	echo "       see the git clone man page for further information"
 }
 
@@ -80,6 +80,7 @@ cmd_default() {
 	echo '	hotfix = hotfix/' >> config
 	echo '	support = support/' >> config
 	echo '	versiontag = v' >> config
+	echo '	command = gf' >> config
 	# create the local master branch following the remote master
 	gitflow_load_settings
 	git_do branch --track $MASTER_BRANCH $ORIGIN/$MASTER_BRANCH >/dev/null 2>&1 || \

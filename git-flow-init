@@ -234,7 +234,8 @@ cmd_default() {
 	   ! git config --get gitflow.prefix.release >/dev/null 2>&1 || 
 	   ! git config --get gitflow.prefix.hotfix >/dev/null 2>&1 || 
 	   ! git config --get gitflow.prefix.support >/dev/null 2>&1 || 
-	   ! git config --get gitflow.prefix.versiontag >/dev/null 2>&1; then
+	   ! git config --get gitflow.prefix.versiontag >/dev/null 2>&1 ||
+	   ! git config --get gitflow.prefix.command >/dev/null 2>&1; then
 		echo
 		echo "How to name your supporting branch prefixes?"
 	fi
@@ -307,6 +308,19 @@ cmd_default() {
 		fi
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
 		git_do config gitflow.prefix.versiontag "$prefix"
+	fi
+
+	# Gitflow shell command
+	if ! git config --get gitflow.prefix.command >/dev/null 2>&1 || flag force; then
+		default_suggestion=$(git config --get gitflow.prefix.command || echo "gf")
+		printf "Gitflow shell command? [$default_suggestion] "
+		if noflag defaults; then
+			read answer
+		else
+			printf "\n"
+		fi
+		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
+		git_do config gitflow.prefix.command "$prefix"
 	fi
 
 

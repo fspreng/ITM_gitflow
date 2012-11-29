@@ -44,7 +44,7 @@ init() {
 }
 
 usage() {
-#	echo "usage: git-flow commit <commit_message>"
+#	echo "usage: $GITFLOW_COMMAND commit <commit_message>"
 	echo "usage: git-flow commit <arguments>"
 	echo "       see the git commit man page for further information"
 }

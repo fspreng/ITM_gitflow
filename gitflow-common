@@ -185,7 +185,8 @@ gitflow_has_prefixes_configured() {
 	git config --get gitflow.prefix.release >/dev/null 2>&1     && \
 	git config --get gitflow.prefix.hotfix >/dev/null 2>&1      && \
 	git config --get gitflow.prefix.support >/dev/null 2>&1     && \
-	git config --get gitflow.prefix.versiontag >/dev/null 2>&1
+	git config --get gitflow.prefix.versiontag >/dev/null 2>&1     && \
+	git config --get gitflow.prefix.command >/dev/null 2>&1
 }
 
 gitflow_is_initialized() {
@@ -202,6 +203,7 @@ gitflow_load_settings() {
 	export MASTER_BRANCH=$(git config --get gitflow.branch.master)
 	export DEVELOP_BRANCH=$(git config --get gitflow.branch.develop)
 	export ORIGIN=$(git config --get gitflow.origin || echo origin)
+	export GITFLOW_COMMAND=$(git config --get gitflow.prefix.command)
 }
 
 #
@@ -265,7 +267,7 @@ require_git_repo() {
 
 require_gitflow_initialized() {
 	if ! gitflow_is_initialized; then
-		die "fatal: Not a gitflow-enabled repo yet. Please run \"git-flow init\" first."
+		die "fatal: Not a gitflow-enabled repo yet. Please run the "init" command first."
 	fi
 }
 

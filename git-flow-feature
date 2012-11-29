@@ -45,17 +45,17 @@ init() {
 }
 
 usage() {
-	echo "usage: git-flow feature [list] [-v]"
-	echo "       git-flow feature start [-F] <name> [<base>]"
-	echo "       git-flow feature finish [-rFkDS] [<name|nameprefix>]"
-	echo "       git-flow feature delete [-l] <name>"
-	echo "       git-flow feature publish <name>"
-	echo "       git-flow feature track <name>"
-	echo "       git-flow feature diff [<name|nameprefix>]"
-	echo "       git-flow feature rebase [-i] [<name|nameprefix>]"
-	echo "       git-flow feature checkout [<name|nameprefix>]"
-	echo "       git-flow feature pull [-r] <remote> [<name>]"
-	echo "       git-flow feature update <name> [<base>]"
+	echo "usage: $GITFLOW_COMMAND feature [list] [-v]"
+	echo "       $GITFLOW_COMMAND feature start [-F] <name> [<base>]"
+	echo "       $GITFLOW_COMMAND feature finish [-rFkDS] [<name|nameprefix>]"
+	echo "       $GITFLOW_COMMAND feature delete [-l] <name>"
+	echo "       $GITFLOW_COMMAND feature publish <name>"
+	echo "       $GITFLOW_COMMAND feature track <name>"
+	echo "       $GITFLOW_COMMAND feature diff [<name|nameprefix>]"
+	echo "       $GITFLOW_COMMAND feature rebase [-i] [<name|nameprefix>]"
+	echo "       $GITFLOW_COMMAND feature checkout [<name|nameprefix>]"
+	echo "       $GITFLOW_COMMAND feature pull [-r] <remote> [<name>]"
+	echo "       $GITFLOW_COMMAND feature update <name> [<base>]"
 }
 
 cmd_default() {
@@ -77,7 +77,7 @@ cmd_list() {
 		warn ""
 		warn "You can start a new feature branch:"
 		warn ""
-		warn "    git-flow feature start <name> [<base>]"
+		warn "    $GITFLOW_COMMAND feature start <name> [<base>]"
 		warn ""
 		exit 0
 	fi
@@ -251,7 +251,7 @@ cmd_start() {
 	echo ""
 	echo "Now, start committing on your feature. When done, use:"
 	echo ""
-	echo "     git-flow feature finish $NAME"
+	echo "     $GITFLOW_COMMAND feature finish $NAME"
 	echo
 }
 
@@ -298,10 +298,10 @@ cmd_finish() {
 			echo
 			echo "Merge conflicts not resolved yet, use:"
 			echo "    git mergetool"
-			echo "    git-flow commit"
+			echo "    $GITFLOW_COMMAND commit"
 			echo 
 			echo "You can then complete the finish by running it again:"
-			echo "    git-flow feature finish $NAME"
+			echo "    $GITFLOW_COMMAND feature finish $NAME"
 			echo
 			exit 1
 		fi
@@ -331,7 +331,7 @@ cmd_finish() {
 			warn "Finish was aborted due to conflicts during rebase."
 			warn "Please finish the rebase manually now."
 			warn "When finished, re-run:"
-			warn "    git-flow feature finish '$NAME' '$DEVELOP_BRANCH'"
+			warn "    $GITFLOW_COMMAND feature finish '$NAME' '$DEVELOP_BRANCH'"
 			exit 1
 		fi
 	fi
@@ -358,10 +358,10 @@ cmd_finish() {
 		echo
 		echo "There were merge conflicts. To resolve the merge conflict manually, use:"
 		echo "    git mergetool"
-		echo "    git-flow commit"
+		echo "    $GITFLOW_COMMAND commit"
 		echo 
 		echo "You can then complete the finish by running it again:"
-		echo "    git-flow feature finish $NAME"
+		echo "    $GITFLOW_COMMAND feature finish $NAME"
 		echo
 		exit 1
 	fi

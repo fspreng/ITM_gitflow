@@ -43,7 +43,7 @@ usage() {
 }
 
 cmd_default() {
-	echo "$GITFLOW_VERSION"
+	echo "version: $GITFLOW_VERSION"
 }
 
 cmd_help() {

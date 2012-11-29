@@ -48,9 +48,10 @@ fi
 # The sed expression here replaces all backslashes by forward slashes.
 # This helps our Windows users, while not bothering our Unix users.
 export GITFLOW_DIR='/home/itm/itmsw/pasimodo/x86_64/software/gitflow'
+gitflow_command=$(git config --get gitflow.prefix.command)
 
 usage() {
-	echo "usage: git-flow <subcommand>"
+	echo "usage: $gitflow_command <subcommand>"
 	echo
 	echo "Available subcommands are:"
 	echo "   clone     Clone an existing git repo and initialize it in a next step with respect to the server-sided branching model."
@@ -62,7 +63,7 @@ usage() {
 	echo "   commit    Record changes to the local and the remote repository."
 	echo "   version   Shows version information."
 	echo
-	echo "Try 'git-flow <subcommand> help' for details."
+	echo "Try '$gitflow_command <subcommand> help' for details."
 }
 
 main() {
@@ -116,7 +117,7 @@ main() {
 	fi
 
 	# run the specified action
-  if [ $SUBACTION != "help" ] && [ $SUBCOMMAND != "init" ] && [ $SUBCOMMAND != "clone" ] ; then
+  if [ $SUBACTION != "help" ] && [ $SUBCOMMAND != "init" ] && [ $SUBCOMMAND != "clone" ] && [ $SUBCOMMAND != "version" ] ; then
     init
   fi
   cmd_$SUBACTION "$@"

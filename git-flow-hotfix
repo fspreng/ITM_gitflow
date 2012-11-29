@@ -46,13 +46,13 @@ init() {
 }
 
 usage() {
-	echo "usage: git-flow hotfix [list] [-v]"
-#	echo "       git-flow hotfix start [-F] <version> [<base>]"
-	echo "       git-flow hotfix start [-F] <version>"
-	echo "       git-flow hotfix finish [-Fsumfpknod] <name>"
-	echo "       git-flow hotfix delete [-l] <name>"
-	echo "       git-flow hotfix publish <name>"
-	echo "       git-flow hotfix track <name>"
+	echo "usage: $GITFLOW_COMMAND hotfix [list] [-v]"
+#	echo "       $GITFLOW_COMMAND hotfix start [-F] <version> [<base>]"
+	echo "       $GITFLOW_COMMAND hotfix start [-F] <version>"
+	echo "       $GITFLOW_COMMAND hotfix finish [-Fsumfpknod] <name>"
+	echo "       $GITFLOW_COMMAND hotfix delete [-l] <name>"
+	echo "       $GITFLOW_COMMAND hotfix publish <name>"
+	echo "       $GITFLOW_COMMAND hotfix track <name>"
 }
 
 cmd_default() {
@@ -74,7 +74,7 @@ cmd_list() {
                 warn ""
                 warn "You can start a new hotfix branch:"
                 warn ""
-                warn "    git-flow hotfix start <version> [<base>]"
+                warn "    $GITFLOW_COMMAND hotfix start <version> [<base>]"
                 warn ""
 		exit 0
 	fi
@@ -275,7 +275,7 @@ cmd_start() {
 #	echo "- When done, run:"
 	echo "Now, start committing your hotfixes. When done, use:"
 	echo
-	echo "     git-flow hotfix finish $VERSION_PREFIX$NEW_VERSION"
+	echo "     $GITFLOW_COMMAND hotfix finish $VERSION_PREFIX$NEW_VERSION"
 	echo
 }
 

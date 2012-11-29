@@ -46,13 +46,13 @@ init() {
 }
 
 usage() {
-	echo "usage: git-flow release [list] [-v]"
-#	echo "       git-flow release start [-F] <major/minor> [<base>]"
-	echo "       git-flow release start [-F] <major/minor>"
-	echo "       git-flow release finish [-FsumpkSo] <name>"
-	echo "       git-flow feature delete [-l] <name>"
-	echo "       git-flow release publish <name>"
-	echo "       git-flow release track <name>"
+	echo "usage: $GITFLOW_COMMAND release [list] [-v]"
+#	echo "       $GITFLOW_COMMAND release start [-F] <major/minor> [<base>]"
+	echo "       $GITFLOW_COMMAND release start [-F] <major/minor>"
+	echo "       $GITFLOW_COMMAND release finish [-FsumpkSo] <name>"
+	echo "       $GITFLOW_COMMAND feature delete [-l] <name>"
+	echo "       $GITFLOW_COMMAND release publish <name>"
+	echo "       $GITFLOW_COMMAND release track <name>"
 }
 
 cmd_default() {
@@ -74,7 +74,7 @@ cmd_list() {
                 warn ""
                 warn "You can start a new release branch:"
                 warn ""
-                warn "    git-flow release start <major/minor> [<base>]"
+                warn "    $GITFLOW_COMMAND release start <major/minor> [<base>]"
                 warn ""
 		exit 0
 	fi
@@ -278,7 +278,7 @@ cmd_start() {
 #	echo "- When done, run:"
 	echo "Now, start committing on the release version. When done, use:"
 	echo
-	echo "     git-flow release finish $VERSION_PREFIX$VERSION"
+	echo "     $GITFLOW_COMMAND release finish $VERSION_PREFIX$VERSION"
 	echo
 }
 
@@ -332,7 +332,7 @@ cmd_finish() {
 			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
 			eval git_do tag $opts "$tagname" "$BRANCH" >/dev/null 2>&1 || \
-			die "Tagging failed. Please run finish again to retry."
+			  die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
 
