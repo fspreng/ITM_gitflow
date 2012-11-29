@@ -67,6 +67,8 @@ cmd_list() {
 	local current_branch
 	local short_names
 	release_branches=$(echo "$(git_local_branches)" | grep "^$PREFIX")
+	git_do remote update >/dev/null 2>&1 || \
+	  die "Could not update remote branches from $ORIGIN."
 	local remote_release_branches
 	remote_release_branches=$(echo "$(git_remote_branches)" | grep "^$REMOTE_PREFIX")
 	if [ -z "$release_branches" ] && [ -z "$remote_release_branches" ]; then
