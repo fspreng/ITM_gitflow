@@ -351,7 +351,7 @@ cmd_finish() {
 	DEFINE_boolean push true "push to $ORIGIN after performing finish" p
 	DEFINE_boolean keep false "keep branch after performing finish" k
 	DEFINE_boolean notag false "don't tag this release" n
-	DEFINE_boolean onlymaster false "merge the current hotfix branch only into the master branch" o
+	DEFINE_boolean onlyhotfix false "don't merge the current hotfix branch into any other branch" o
 	DEFINE_boolean onlydevelop false "merge the current hotfix branch only into the develop branch and not into an existing release branch (requires flag -o is absent)" d
 	parse_args "$@"
 	require_version_arg
@@ -363,22 +363,29 @@ cmd_finish() {
 
 	# sanity checks
 	require_branch "$BRANCH"
+	require_clean_working_tree
+	git_do checkout "$BRANCH" >/dev/null 2>&1 || \
+	  die "Could not check out $BRANCH."
 	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not fetch $BRANCH from $ORIGIN."
 	require_branch "$ORIGIN/$BRANCH"
-	require_clean_working_tree
-	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
-		if flag fetch; then
-			git_do fetch -q "$ORIGIN" "$MASTER_BRANCH" || \
-			  die "Could not fetch $MASTER_BRANCH from $ORIGIN."
-			git_do fetch -q "$ORIGIN" "$BRANCH" || \
-			  die "Could not fetch $BRANCH from $ORIGIN."
-		fi
-	fi
+	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1 || \
+	  die "There were merge conflicts on $BRANCH. Resolve them using git mergetool."
+	git_do push origin "$BRANCH" >/dev/null 2>&1 || \
+	  die "Could not push to $BRANCH from $ORIGIN."
+	# branch $ORIGIN/$BRANCH should be existent, but check it anyway...
+#	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
+#		if flag fetch; then
+#			git_do fetch -q "$ORIGIN" "$BRANCH" || \
+#			  die "Could not fetch $BRANCH from $ORIGIN."
+#			git_do fetch -q "$ORIGIN" "$MASTER_BRANCH" || \
+#			  die "Could not fetch $MASTER_BRANCH from $ORIGIN."
+#		fi
+#	fi
 
-	if has "$ORIGIN/$MASTER_BRANCH" $(git_remote_branches); then
-		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
-	fi
+#	if has "$ORIGIN/$MASTER_BRANCH" $(git_remote_branches); then
+#		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+#	fi
 	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
 		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
@@ -400,10 +407,12 @@ cmd_finish() {
 	fi
 
 	local norelease=false
-	if ! flag onlymaster; then
+	if ! flag onlyhotfix; then
 #		if flag release; then
 		if ! flag onlydevelop; then
 			local remote_tag="$ORIGIN/$(git config --get gitflow.prefix.release)"
+			git_do remote update >/dev/null 2>&1 || \
+			  die "Could not update remote branches from $ORIGIN."
 			if ! has_like $remote_tag $(git_remote_branches); then
 				echo
 				warn "A release branch does not exist. Merging only into the develop branch."
@@ -455,13 +464,17 @@ cmd_finish() {
 							  die "Could not push to $local_name from $ORIGIN."
 							git_do checkout "$BRANCH" >/dev/null 2>&1 || \
 							  die "Could not check out $BRANCH."
-							git_do branch -d "$local_name" >/dev/null 2>&1
+							git_do branch -D "$local_name" >/dev/null 2>&1
 						else
 							git_do checkout "$local_name" >/dev/null 2>&1 || \
 							  die "Could not check out $local_name."
 #							if flag fetch; then
 								git_do fetch "$ORIGIN" "$local_name" >/dev/null 2>&1 || \
 								  die "Could not fetch $local_name from $ORIGIN."
+								git_do merge --no-commit "$ORIGIN/$local_name" >/dev/null 2>&1  || \
+								  die "There were merge conflicts on $local_name. Resolve them using git mergetool."
+								git_do push origin "$local_name" >/dev/null 2>&1 || \
+								  die "Could not push to $local_name from $ORIGIN."
 #							fi
 							git_do merge --no-ff "$BRANCH" >/dev/null 2>&1 || \
 							  die "There were merge conflicts."
@@ -481,11 +494,17 @@ cmd_finish() {
 			# try to merge into develop
 			# in case a previous attempt to finish this hotfix branch has failed,
 			# but the merge into develop was successful, we skip it now
+			git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+			  die "Could not check out $DEVELOP_BRANCH."
 			git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
+			git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1  || \
+			  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+			git_do push origin "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+			  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
 			if ! git_is_branch_merged_into "$BRANCH" "$ORIGIN/$DEVELOP_BRANCH"; then
-				git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
-				  die "Could not check out $DEVELOP_BRANCH."
+#				git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+#				  die "Could not check out $DEVELOP_BRANCH."
 
 				# TODO: Actually, accounting for 'git describe' pays, so we should
 				# ideally git merge --no-ff $tagname here, instead!
@@ -495,43 +514,41 @@ cmd_finish() {
 
 				git_do push "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 				  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
-				git_do checkout "$BRANCH" >/dev/null 2>&1 || \
-				  die "Could not check out $BRANCH."
 			fi
 #		fi
 	fi
 
-	# try to merge into master
-	# in case a previous attempt to finish this hotfix branch has failed,
-	# but the merge into master was successful, we skip it now
-	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
-#		# first, find the tag of the previous version
-#		local previoustag
-#		previoustag=git_do describe --abbrev=0 --tags
-#		git_do checkout "$MASTER_BRANCH" >/dev/null 2>&1 || \
-#		  die "Could not check out $MASTER_BRANCH."
-#		git_do checkout "$previoustag" >/dev/null 2>&1 || \
-#		  die "Could not check out $previoustag."
-#		git_do commit --amend -v >/dev/null 2>&1 || \
+#	# try to merge into master
+#	# in case a previous attempt to finish this hotfix branch has failed,
+#	# but the merge into master was successful, we skip it now
+#	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
+##		# first, find the tag of the previous version
+##		local previoustag
+##		previoustag=git_do describe --abbrev=0 --tags
+##		git_do checkout "$MASTER_BRANCH" >/dev/null 2>&1 || \
+##		  die "Could not check out $MASTER_BRANCH."
+##		git_do checkout "$previoustag" >/dev/null 2>&1 || \
+##		  die "Could not check out $previoustag."
+##		git_do commit --amend -v >/dev/null 2>&1 || \
+##		  die "There were merge conflicts."
+##		  # TODO: What do we do now?
+#		git_do merge --no-ff "$MASTER_BRANCH" >/dev/null 2>&1 || \
 #		  die "There were merge conflicts."
 #		  # TODO: What do we do now?
-		git_do merge --no-ff "$MASTER_BRANCH" >/dev/null 2>&1 || \
-		  die "There were merge conflicts."
-		  # TODO: What do we do now?
-		git_do push "$BRANCH":"$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1 || \
-		  die "Could not push to $ORIGIN/$MASTER_BRANCH from $BRANCH."
-		git_do checkout "$MASTER_BRANCH" >/dev/null 2>&1 || \
-		  die "Could not check out $MASTER_BRANCH."
-		git_do fetch -q "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || \
-		  die "Could not fetch $MASTER_BRANCH from $ORIGIN."
-		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
-		git_do checkout "$BRANCH" >/dev/null 2>&1 || \
-		  die "Could not check out $BRANCH."
-	fi
+#		git_do push "$BRANCH":"$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1 || \
+#		  die "Could not push to $ORIGIN/$MASTER_BRANCH from $BRANCH."
+#		git_do checkout "$MASTER_BRANCH" >/dev/null 2>&1 || \
+#		  die "Could not check out $MASTER_BRANCH."
+#		git_do fetch -q "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || \
+#		  die "Could not fetch $MASTER_BRANCH from $ORIGIN."
+#		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+#		git_do checkout "$BRANCH" >/dev/null 2>&1 || \
+#		  die "Could not check out $BRANCH."
+#	fi
 
 	if flag push; then
-		git_do push "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || \
-			die "Could not push to $MASTER_BRANCH from $ORIGIN."
+#		git_do push "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || \
+#			die "Could not push to $MASTER_BRANCH from $ORIGIN."
 		if noflag notag; then
 			git_do push --tags "$ORIGIN" >/dev/null 2>&1 || \
 				die "Could not push tags to $ORIGIN."
@@ -542,19 +559,20 @@ cmd_finish() {
 	if noflag keep; then
 		git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not check out $BRANCH."
-		git_do branch -d "$BRANCH" >/dev/null 2>&1
+#		git_do branch -d "$BRANCH" >/dev/null 2>&1
+		git_do branch -D "$BRANCH" >/dev/null 2>&1
 		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
 	fi
 
 	echo
 	echo "Summary of actions:"
 	echo "- Latest objects have been fetched from '$ORIGIN'"
-	echo "- Hotfix branch has been merged into '$MASTER_BRANCH'"
+#	echo "- Hotfix branch has been merged into '$MASTER_BRANCH'"
 #	if noflag notag; then
 		echo "- The hotfix was tagged '$VERSION_PREFIX$VERSION'"
 #	fi
 #	if flag release; then
-	if ! flag onlymaster; then
+	if ! flag onlyhotfix; then
 		if [ "$onlydevelop" != "true" ] && [ "$norelease" != "true" ]; then
 			echo "- Hotfix branch has been back-merged into the existing release branch"
 		fi
@@ -567,13 +585,16 @@ cmd_finish() {
 		echo "- Hotfix branch '$BRANCH' (local and remote) has been deleted"
 	fi
 	if flag push; then
-		if ! flag onlymaster; then
-			echo "- '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+		if ! flag onlyhotfix; then
+#			echo "- '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+			echo "- tag '$VERSION_PREFIX$VERSION' has been pushed to '$ORIGIN'"
 		else
 			if [ "$norelease" != "true" ]; then
-				echo "- '$DEVELOP_BRANCH', the release branch, '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+#				echo "- '$DEVELOP_BRANCH', the release branch, '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+				echo "- '$DEVELOP_BRANCH', the release branch and the tag have been pushed to '$ORIGIN'"
 			else
-				echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+#				echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+				echo "- '$DEVELOP_BRANCH' and the tag have been pushed to '$ORIGIN'"
 			fi
 		fi
 	fi
@@ -595,7 +616,7 @@ cmd_delete() {
 	  die "Could not check out $DEVELOP_BRANCH."
 
 	# delete local branch
-	git_do branch -d "$BRANCH" >/dev/null 2>&1
+	git_do branch -D "$BRANCH" >/dev/null 2>&1
 
 	if ! flag local; then
 		# delete remote branch

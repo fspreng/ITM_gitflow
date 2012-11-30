@@ -530,7 +530,7 @@ cmd_delete() {
 	  die "Could not check out $DEVELOP_BRANCH."
 
 	# delete local branch
-	git_do branch -d "$BRANCH" >/dev/null 2>&1
+	git_do branch -D "$BRANCH" >/dev/null 2>&1
 
 	if ! flag local; then
 		# delete remote branch
