@@ -72,7 +72,7 @@ cmd_default() {
 	# initialize git-flow for cloned repository
 	cd "$DESTINATION/.git"
 	echo '[gitflow "branch"]' >> config
-	echo '	master = master' >> config
+	echo '	master = deploy' >> config
 	echo '	develop = develop' >> config
 	echo '[gitflow "prefix"]' >> config
 	echo '	feature = feature/' >> config

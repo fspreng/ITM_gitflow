@@ -198,7 +198,7 @@ cmd_start() {
 		git_do merge --no-commit "$ORIGIN/$BASE" >/dev/null 2>&1  || \
 		  die "There were merge conflicts on $BASE. Resolve them using git mergetool."
 		git_do push origin "$BASE" >/dev/null 2>&1 || \
-		  die "Could not push to $BASE from $ORIGIN.
+		  die "Could not push to $BASE from $ORIGIN."
 	fi
 	require_branch_absent "$BRANCH"
 	git_do remote update >/dev/null 2>&1 || \
