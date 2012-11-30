@@ -218,7 +218,7 @@ parse_remote_name() {
 }
 
 cmd_start() {
-	DEFINE_boolean fetch false 'fetch from $ORIGIN before performing local operation' F
+	DEFINE_boolean fetch true 'fetch from $ORIGIN before performing local operation' F
 	parse_args "$@"
 	BASE=${2:-$DEVELOP_BRANCH}
 	require_name_arg
@@ -231,7 +231,14 @@ cmd_start() {
 
 	# update the local repo with remote changes, if asked
 	if flag fetch; then
-		git_do fetch -q "$ORIGIN" "$BASE" >/dev/null 2>&1
+		git_do checkout "$BASE" >/dev/null 2>&1 || \
+		  die "Could not check out $BASE."
+		git_do fetch -q "$ORIGIN" "$BASE" >/dev/null 2>&1 || \
+		  die "Could not fetch $BASE from $ORIGIN."
+		git_do merge --no-commit "$ORIGIN/$BASE" >/dev/null 2>&1  || \
+		  die "There were merge conflicts on $BASE. Resolve them using git mergetool."
+		git_do push origin "$BASE" >/dev/null 2>&1 || \
+		  die "Could not push to $BASE from $ORIGIN."
 	fi
 
 	# if the origin branch counterpart exists, assert that the local branch
@@ -244,7 +251,8 @@ cmd_start() {
 	if ! git_do checkout -b "$BRANCH" "$BASE" >/dev/null 2>&1; then
 		die "Could not create feature branch '$BRANCH'"
 	else
-		git_do push origin "$BRANCH" >/dev/null 2>&1
+		git_do push origin "$BRANCH" >/dev/null 2>&1 || \
+		  die "Could not push to $BRANCH from $ORIGIN."
 	fi
 
 	echo
@@ -270,9 +278,15 @@ cmd_finish() {
 
 	# sanity checks
 	require_branch "$BRANCH"
+	git_do checkout "$BRANCH" >/dev/null 2>&1 || \
+	  die "Could not check out $BRANCH."
 	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not fetch $BRANCH from $ORIGIN."
 	require_branch "$ORIGIN/$BRANCH"
+	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1 || \
+	  die "There were merge conflicts on $BRANCH. Resolve them using git mergetool."
+	git_do push origin "$BRANCH" >/dev/null 2>&1 || \
+	  die "Could not push to $BRANCH from $ORIGIN."
 
 	# detect if we're restoring from a merge conflict
 	if [ -f "$DOT_GIT_DIR/.gitflow/MERGE_BASE" ]; then
@@ -318,10 +332,18 @@ cmd_finish() {
 	require_clean_working_tree
 
 	# update local repo with remote changes first, if asked
+	# branch $ORIGIN/$BRANCH should be existent, but check it anyway...
 	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
 		if flag fetch; then
-			git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1
-			git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1
+#			git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1
+			git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+			  die "Could not check out $DEVELOP_BRANCH."
+			git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+			  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
+			git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+			  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+			git_do push origin "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+			  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
 		fi
 	fi
 
@@ -338,13 +360,15 @@ cmd_finish() {
 			warn "Finish was aborted due to conflicts during rebase."
 			warn "Please finish the rebase manually now."
 			warn "When finished, re-run:"
-			warn "    $GITFLOW_COMMAND feature finish '$NAME' '$DEVELOP_BRANCH'"
+			warn "    $GITFLOW_COMMAND feature finish $NAME $DEVELOP_BRANCH"
 			exit 1
 		fi
 	fi
 
 	# merge into BASE
-	git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1
+	# we should be already on the develop branch, but try checkout anyway...
+	git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+	  die "Could not check out $DEVELOP_BRANCH."
 	if [ "$(git rev-list -n2 "$DEVELOP_BRANCH..$BRANCH" | wc -l)" -eq 1 ]; then
 		git_do merge --ff "$BRANCH" >/dev/null 2>&1
 	else
@@ -449,12 +473,14 @@ cmd_publish() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch "$BRANCH"
-	git_do fetch -q "$ORIGIN" >/dev/null 2>&1
+	git_do fetch -q "$ORIGIN" >/dev/null 2>&1 || \
+	  die "Could not fetch from $ORIGIN."
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	# create remote branch
 	git_do push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH" >/dev/null 2>&1
-	git_do fetch -q "$ORIGIN" >/dev/null 2>&1
+	git_do fetch -q "$ORIGIN" >/dev/null 2>&1 || \
+	  die "Could not fetch from $ORIGIN."
 
 	# configure remote tracking
 	git_do config "branch.$BRANCH.remote" "$ORIGIN" >/dev/null 2>&1
@@ -530,6 +556,8 @@ cmd_rebase() {
 	expand_nameprefix_arg_or_current
 	warn "Will try to rebase '$NAME'..."
 	require_clean_working_tree
+	git_do fetch -q "$ORIGIN"  >/dev/null 2>&1 || \
+	  die "Could not fetch from $ORIGIN."
 	require_branch "$BRANCH"
 
 	git_do checkout -q "$BRANCH"
@@ -608,17 +636,26 @@ cmd_update() {
 	else
 		base="$2"
 	fi
-	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
-	  die "Could not fetch $BRANCH from $ORIGIN."
-	require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+
+	git_do checkout "$base" >/dev/null 2>&1 || \
+	  die "Could not check out $base."
 	git_do fetch -q "$ORIGIN" "$base" >/dev/null 2>&1 || \
 	  die "Could not fetch $base from $ORIGIN."
+	git_do merge --no-commit "$ORIGIN/$base" >/dev/null 2>&1  || \
+	  die "There were merge conflicts on $base. Resolve them using git mergetool."
+	git_do push origin "$base" >/dev/null 2>&1 || \
+	  die "Could not push to $base from $ORIGIN."
 	require_branches_equal "$base" "$ORIGIN/$base"
+	git_do checkout "$BRANCH" >/dev/null 2>&1 || \
+	  die "Could not check out $BRANCH."
+	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
+	  die "Could not fetch $BRANCH from $ORIGIN."
+	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1  || \
+	  die "There were merge conflicts on $BRANCH. Resolve them using git mergetool."
+	require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	if ! git_is_branch_merged_into "$BRANCH" "$base"; then
-		git_do checkout "$BRANCH" >/dev/null 2>&1 || \
-		  die "Could not check out $BRANCH."
 		git_do merge --no-ff "$base" >/dev/null 2>&1 || \
-		  die "There were merge conflicts. Fix them!"
+		  die "There were merge conflicts on $BRANCH. Resolve them using git mergetool."
 		  # TODO: What do we do now?
 		git_do push origin "$BRANCH" >/dev/null 2>&1 || \
 		  die "Could not push to $BRANCH from $ORIGIN."

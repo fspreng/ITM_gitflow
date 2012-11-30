@@ -50,7 +50,7 @@ usage() {
 #	echo "       $GITFLOW_COMMAND release start [-F] <major/minor> [<base>]"
 	echo "       $GITFLOW_COMMAND release start [-F] <major/minor>"
 	echo "       $GITFLOW_COMMAND release finish [-FsumpkSo] <name>"
-	echo "       $GITFLOW_COMMAND feature delete [-l] <name>"
+	echo "       $GITFLOW_COMMAND release delete [-l] <name>"
 	echo "       $GITFLOW_COMMAND release publish <name>"
 	echo "       $GITFLOW_COMMAND release track <name>"
 }
@@ -247,7 +247,7 @@ require_no_existing_remote_release_branches() {
 }
 
 cmd_start() {
-	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
+	DEFINE_boolean fetch true "fetch from $ORIGIN before performing finish" F
 	parse_args "$@"
 #	BASE=${2:-$DEVELOP_BRANCH}
 #	require_version_arg
@@ -264,7 +264,14 @@ cmd_start() {
 #	require_branch_absent "$ORIGIN/$BRANCH"
 	require_tag_absent "$VERSION_PREFIX$VERSION"
 	if flag fetch; then
-		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1
+		git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+		  die "Could not check out $DEVELOP_BRANCH."
+		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+		  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
+		git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1  || \
+		  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+		git_do push origin "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+		  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
 	fi
 	# if the origin branch counterpart exists, assert that the local branch
 	# isn't behind it (to avoid unnecessary rebasing)
@@ -274,7 +281,7 @@ cmd_start() {
 
 	# create the local branch and the corresponding remote branch
 	if ! git_do checkout -b "$BRANCH" "$DEVELOP_BRANCH" >/dev/null 2>&1; then
-		die "Could not create hotfix branch '$BRANCH'"
+		die "Could not create release branch '$BRANCH'"
 	else
 		git_do push origin "$BRANCH" >/dev/null 2>&1
 	fi
@@ -316,24 +323,37 @@ cmd_finish() {
 
 	# sanity checks
 	require_branch "$BRANCH"
+	require_clean_working_tree
+	git_do checkout "$BRANCH" >/dev/null 2>&1 || \
+	  die "Could not check out $BRANCH."
 	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not fetch $BRANCH from $ORIGIN."
 	require_branch "$ORIGIN/$BRANCH"
-	require_clean_working_tree
+	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1 || \
+	  die "There were merge conflicts on $BRANCH. Resolve them using git mergetool."
+	git_do push origin "$BRANCH" >/dev/null 2>&1 || \
+	  die "Could not push to $BRANCH from $ORIGIN."
+	# branch $ORIGIN/$BRANCH should be existent, but check it anyway...
 	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
 		if flag fetch; then
+#			git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
+#			  die "Could not fetch $BRANCH from $ORIGIN."
+			git_do checkout "$MASTER_BRANCH" >/dev/null 2>&1 || \
+			  die "Could not check out $MASTER_BRANCH."
 			git_do fetch -q "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not fetch $MASTER_BRANCH from $ORIGIN."
-			git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
-			  die "Could not fetch $BRANCH from $ORIGIN."
+			git_do merge --no-commit "$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1 || \
+			  die "There were merge conflicts on $MASTER_BRANCH. Resolve them using git mergetool."
+#			git_do push origin "$MASTER_BRANCH" >/dev/null 2>&1 || \
+#			  die "Could not push to $MASTER_BRANCH from $ORIGIN."
 		fi
 	fi
 
 	if has "$ORIGIN/$MASTER_BRANCH" $(git_remote_branches); then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
 	fi
-	if has "$ORIGIN/BRANCH" $(git_remote_branches); then
-		require_branches_equal "$BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
+	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
+		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
 
 	if noflag notag; then
@@ -356,12 +376,17 @@ cmd_finish() {
 		# try to merge into develop
 		# in case a previous attempt to finish this release branch has failed,
 		# but the merge into develop was successful, we skip it now
+		git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+		  die "Could not check out $DEVELOP_BRANCH."
 		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
+		git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+		  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+		git_do push origin "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+		  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
 		if ! git_is_branch_merged_into "$BRANCH" "$ORIGIN/$DEVELOP_BRANCH"; then
-			git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
-			  die "Could not check out $DEVELOP_BRANCH."
-
+#			git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+#			  die "Could not check out $DEVELOP_BRANCH."
 			# TODO: Actually, accounting for 'git describe' pays, so we should
 			# ideally git merge --no-ff $tagname here, instead!
 			if noflag squash; then

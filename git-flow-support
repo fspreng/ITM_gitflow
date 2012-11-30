@@ -180,7 +180,7 @@ require_base_is_on_master() {
 }
 
 cmd_start() {
-	DEFINE_boolean fetch false "fetch from $ORIGIN before performing local operation" F
+	DEFINE_boolean fetch true "fetch from $ORIGIN before performing local operation" F
 	parse_args "$@"
 	require_version_arg
 	require_base_arg
@@ -191,7 +191,14 @@ cmd_start() {
 
 	# update the local repo with remote changes, if asked
 	if flag fetch; then
-		git_do fetch -q "$ORIGIN" "$BASE" >/dev/null 2>&1
+		git_do checkout "$BASE" >/dev/null 2>&1 || \
+		  die "Could not check out $BASE."
+		git_do fetch -q "$ORIGIN" "$BASE" >/dev/null 2>&1 || \
+		  die "Could not fetch $BASE from $ORIGIN."
+		git_do merge --no-commit "$ORIGIN/$BASE" >/dev/null 2>&1  || \
+		  die "There were merge conflicts on $BASE. Resolve them using git mergetool."
+		git_do push origin "$BASE" >/dev/null 2>&1 || \
+		  die "Could not push to $BASE from $ORIGIN.
 	fi
 	require_branch_absent "$BRANCH"
 	git_do remote update >/dev/null 2>&1 || \

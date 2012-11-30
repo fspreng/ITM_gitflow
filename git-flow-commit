@@ -67,6 +67,8 @@ cmd_default() {
 		  die "Could not commit changes to local repository $BRANCH."
 		git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
 		  die "Could not fetch $BRANCH from $ORIGIN."
+		git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1  || \
+		  die "There were merge conflicts. Resolve them using git mergetool."
 		git_do push origin "$BRANCH" >/dev/null 2>&1 || \
 		  die "Could not push to $BRANCH from $ORIGIN."
 

@@ -236,7 +236,7 @@ require_no_existing_hotfix_branches() {
 }
 
 cmd_start() {
-	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
+	DEFINE_boolean fetch true "fetch from $ORIGIN before performing finish" F
 	parse_args "$@"
 #	BASE=${2:-$MASTER_BRANCH}
 	require_version_arg
@@ -255,7 +255,12 @@ cmd_start() {
 	require_tag_existing "$VERSION_PREFIX$VERSION"
 	require_tag_absent "$VERSION_PREFIX$NEW_VERSION"
 	if flag fetch; then
-		git_do fetch -q "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1
+		git_do checkout "$MASTER_BRANCH" >/dev/null 2>&1 || \
+		  die "Could not check out $MASTER_BRANCH."
+		git_do fetch -q "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || \
+		  die "Could not fetch $MASTER_BRANCH from $ORIGIN."
+		git_do merge --no-commit "$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1  || \
+		  die "There were merge conflicts on $MASTER_BRANCH. Resolve them using git mergetool."
 	fi
 	# if the origin branch counterpart exists, assert that the local branch
 	# isn't behind it (to avoid unnecessary rebasing)
@@ -293,12 +298,14 @@ cmd_publish() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch "$BRANCH"
-	git_do fetch -q "$ORIGIN" >/dev/null 2>&1
+	git_do fetch -q "$ORIGIN" >/dev/null 2>&1 || \
+	  die "Could not fetch from $ORIGIN
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	# create remote branch
 	git_do push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH" >/dev/null 2>&1
-	git_do fetch -q "$ORIGIN" >/dev/null 2>&1
+	git_do fetch -q "$ORIGIN" >/dev/null 2>&1 || \
+	  die "Could not fetch from $ORIGIN."
 
 	# configure remote tracking
 	git_do config "branch.$BRANCH.remote" "$ORIGIN" >/dev/null 2>&1
@@ -321,7 +328,8 @@ cmd_track() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch_absent "$BRANCH"
-	git_do fetch -q "$ORIGIN" >/dev/null 2>&1
+	git_do fetch -q "$ORIGIN"  >/dev/null 2>&1 || \
+	  die "Could not fetch from $OR
 	require_branch "$ORIGIN/$BRANCH"
 
 	# create tracking branch
