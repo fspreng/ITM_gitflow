@@ -145,6 +145,35 @@ parse_args() {
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
 
+	# process possible trailing arguments
+	length_old=0
+	for k in "${@:2}"
+	do
+		length_old=$[$length_old+1]
+	done
+	if [ "$length_old" -gt "0" ]; then
+		FLAGS "${@:2}" || exit $?
+		length_new=0
+		for l in ${FLAGS_ARGV[@]}
+		do
+			length_new=$[$length_new+1]
+		done
+		if [ "$length_new" -gt "0" ] && [ "$length_new" != "$length_old" ]; then
+			die "Putting flags between the two main arguments is not a good idea! Process aborted."
+		fi
+		if [ "$length_new" == "$length_old" ]; then
+			FLAGS "${@:3}" || exit $?
+			length_newnew=0
+			for l in ${FLAGS_ARGV[@]}
+			do
+				length_newnew=$[$length_newnew+1]
+			done
+			if [ "$length_newnew" == "$length_old" ]; then
+				die "Too many arguments have been found!"
+			fi
+		fi
+	fi
+
 	# read arguments into global variables
 	VERSION=$1
 	# check whether the user has already added the version tag prefix or not
@@ -260,6 +289,7 @@ cmd_start() {
 	require_branch_absent "$BRANCH"
 	git_do remote update >/dev/null 2>&1 || \
 	  die "Could not update remote branches from $ORIGIN."
+	git_do remote prune origin >/dev/null 2>&1
 	require_no_existing_remote_release_branches
 #	require_branch_absent "$ORIGIN/$BRANCH"
 	require_tag_absent "$VERSION_PREFIX$VERSION"
@@ -283,7 +313,7 @@ cmd_start() {
 	if ! git_do checkout -b "$BRANCH" "$DEVELOP_BRANCH" >/dev/null 2>&1; then
 		die "Could not create release branch '$BRANCH'"
 	else
-		git_do push origin "$BRANCH" >/dev/null 2>&1
+		git_do push -u origin "$BRANCH" >/dev/null 2>&1
 	fi
 
 	echo
@@ -328,6 +358,7 @@ cmd_finish() {
 	  die "Could not check out $BRANCH."
 	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not fetch $BRANCH from $ORIGIN."
+	git_do remote prune origin >/dev/null 2>&1
 	require_branch "$ORIGIN/$BRANCH"
 	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1 || \
 	  die "There were merge conflicts on $BRANCH. Resolve them using git mergetool."
@@ -367,7 +398,7 @@ cmd_finish() {
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
 			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
-			eval git_do tag $opts "$tagname" "$BRANCH" >/dev/null 2>&1 || \
+			eval git_do tag $opts "$tagname" "$BRANCH" || \
 			  die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
@@ -397,7 +428,7 @@ cmd_finish() {
 				git_do merge --squash "$BRANCH" >/dev/null 2>&1 || \
 				  die "There were merge conflicts."
 				  # TODO: What do we do now?
-				git_do commit >/dev/null 2>&1 
+				git_do commit --quiet 
 			fi
 			git_do push "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
@@ -419,7 +450,7 @@ cmd_finish() {
 		else
 			git_do merge --squash "$BRANCH" >/dev/null 2>&1 || \
 				die "There were merge conflicts."
-			git_do commit >/dev/null 2>&1 
+			git_do commit --quiet 
 		fi
 	fi
 
@@ -430,8 +461,8 @@ cmd_finish() {
 			git_do push --tags "$ORIGIN" >/dev/null 2>&1 || \
 			  die "Could not push tags to $ORIGIN."
 		fi
-		git_do push "$ORIGIN" :"$BRANCH" >/dev/null 2>&1 || \
-			die "Could not delete the remote $BRANCH in $ORIGIN."
+#		git_do push "$ORIGIN" :"$BRANCH" >/dev/null 2>&1 || \
+#			die "Could not delete the remote $BRANCH in $ORIGIN."
 	fi
 
 	# delete branch
@@ -439,7 +470,8 @@ cmd_finish() {
 		git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not check out $BRANCH."
 		git_do branch -d "$BRANCH" >/dev/null 2>&1
-		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
+		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1 || \
+		  die "Could not delete the remote $BRANCH in $ORIGIN."
 	fi
 
 	echo
@@ -478,6 +510,7 @@ cmd_publish() {
 	require_clean_working_tree
 	require_branch "$BRANCH"
 	git_do fetch -q "$ORIGIN" >/dev/null 2>&1
+	git_do remote prune origin >/dev/null 2>&1
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	# create remote branch
@@ -505,7 +538,9 @@ cmd_track() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch_absent "$BRANCH"
-	git_do fetch -q "$ORIGIN" >/dev/null 2>&1
+	git_do fetch -q "$ORIGIN" >/dev/null 2>&1 || \
+	  die "Could not fetch from $ORIGIN."
+	git_do remote prune origin >/dev/null 2>&1
 	require_branch "$ORIGIN/$BRANCH"
 
 	# create tracking branch
@@ -533,15 +568,24 @@ cmd_delete() {
 	git_do branch -D "$BRANCH" >/dev/null 2>&1
 
 	if ! flag local; then
-		# delete remote branch
-		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
+		# make sure that the remote branch should be deleted as well
+		read -p "Are you sure that you want to delete the remote branch as well (Y/N)? " answer
+		if [ "$answer" == "y" ] || [ "$answer" == "Y" ] || [ "$answer" == "yes" ] || [ "$answer" == "Yes" ] || [ "$answer" == "YES" ]; then
+			# delete remote branch
+#			git_do remote prune origin >/dev/null 2>&1
+			git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
+		else
+			answer="false"
+		fi
 	fi
 
 	echo
 	echo "Summary of actions:"
 	echo "- The local branch '$BRANCH' has been deleted"
 	if ! flag local; then
-		echo "- The remote branch '$ORIGIN/$BRANCH' has been deleted"
+		if [ "$answer" != "false" ]; then
+			echo "- The remote branch '$ORIGIN/$BRANCH' has been deleted"
+		fi
 	fi
 	echo "- You are now on branch '$DEVELOP_BRANCH'"
 	echo

@@ -149,6 +149,35 @@ parse_args() {
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
 
+	# process possible trailing arguments
+	length_old=0
+	for k in "${@:2}"
+	do
+		length_old=$[$length_old+1]
+	done
+	if [ "$length_old" -gt "0" ]; then
+		FLAGS "${@:2}" || exit $?
+		length_new=0
+		for l in ${FLAGS_ARGV[@]}
+		do
+			length_new=$[$length_new+1]
+		done
+		if [ "$length_new" -gt "0" ] && [ "$length_new" != "$length_old" ]; then
+			die "Putting flags between the two main arguments is not a good idea! Process aborted."
+		fi
+		if [ "$length_new" == "$length_old" ]; then
+			FLAGS "${@:3}" || exit $?
+			length_newnew=0
+			for l in ${FLAGS_ARGV[@]}
+			do
+				length_newnew=$[$length_newnew+1]
+			done
+			if [ "$length_newnew" == "$length_old" ]; then
+				die "Too many arguments have been found!"
+			fi
+		fi
+	fi
+
 	# read arguments into global variables
 	VERSION=$1
 	BASE=$2
@@ -203,6 +232,7 @@ cmd_start() {
 	require_branch_absent "$BRANCH"
 	git_do remote update >/dev/null 2>&1 || \
 	  die "Could not update remote branches from $ORIGIN."
+	git_do remote prune origin >/dev/null 2>&1
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	# if the origin branch counterpart exists, assert that the local branch
@@ -217,7 +247,7 @@ cmd_start() {
 			die "Could not create support branch '$BRANCH'"
 		fi
 	else
-		git_do push origin "$BRANCH" >/dev/null 2>&1
+		git_do push -u origin "$BRANCH" >/dev/null 2>&1
 	fi
 
 	echo
@@ -245,15 +275,24 @@ cmd_delete() {
 	git_do branch -D "$BRANCH" >/dev/null 2>&1
 
 	if ! flag local; then
-		# delete remote branch
-		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
+		# make sure that the remote branch should be deleted as well
+		read -p "Are you sure that you want to delete the remote branch as well (Y/N)? " answer
+		if [ "$answer" == "y" ] || [ "$answer" == "Y" ] || [ "$answer" == "yes" ] || [ "$answer" == "Yes" ] || [ "$answer" == "YES" ]; then
+			# delete remote branch
+#			git_do remote prune origin >/dev/null 2>&1
+			git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
+		else
+			answer="false"
+		fi
 	fi
 
 	echo
 	echo "Summary of actions:"
 	echo "- The local branch '$BRANCH' has been deleted"
 	if ! flag local; then
-		echo "- The remote branch '$ORIGIN/$BRANCH' has been deleted"
+		if [ "$answer" != "false" ]; then
+			echo "- The remote branch '$ORIGIN/$BRANCH' has been deleted"
+		fi
 	fi
 	echo "- You are now on branch '$DEVELOP_BRANCH'"
 	echo

@@ -141,9 +141,9 @@ git_compare_branches() {
 		local base=$(git merge-base "$commit1" "$commit2")
 		if [ $? -ne 0 ]; then
 			return 4
-		elif [ "$commit1" = "$base" ]; then
+		elif [ "$commit1" == "$base" ]; then
 			return 1
-		elif [ "$commit2" = "$base" ]; then
+		elif [ "$commit2" == "$base" ]; then
 			return 2
 		else
 			return 3
@@ -308,7 +308,7 @@ require_branch_absent() {
 
 require_tag_absent() {
 	for tag in $(git_all_tags); do
-		if [ "$1" = "$tag" ]; then
+		if [ "$1" == "$tag" ]; then
 #			die "Tag '$1' already exists. Pick another name."
 			nextdot=$(expr index "$1" .)
 			local prefix
@@ -338,23 +338,24 @@ require_tag_absent() {
 require_tag_existing() {
 	local found=0
 	for tag in $(git_all_tags); do
-		if [ "$1" = "$tag" ]; then
+		if [ "$1" == "$tag" ]; then
 			found=1
 		fi
 	done
-	if [ "$found" = 0 ]; then
-		local nextdot
-		nextdot=$(expr index "$1" .)
-		local prefix
-		prefix=${1:0: nextdot+1}
-		local suffix
-		suffix=${1:nextdot}
-		nextdot=$(expr index "$suffix" .)
-		local last
-		last=${suffix:nextdot}
-		((oldlast=last-1))
-		old_version=$prefix.$oldlast
-		die "Tag '$old_version' does not exist. Check the tag of the released version you want to fix."
+	if [ "$found" == 0 ]; then
+#		local nextdot
+#		nextdot=$(expr index "$1" .)
+#		local prefix
+#		prefix=${1:0: nextdot+1}
+#		local suffix
+#		suffix=${1:nextdot}
+#		nextdot=$(expr index "$suffix" .)
+#		local last
+#		last=${suffix:nextdot}
+#		((oldlast=last-1))
+#		old_version=$prefix.$oldlast
+#		die "Tag '$old_version' does not exist. Check the tag of the released version you want to fix."
+		die "Tag '$1' does not exist. Check the tag of the released version you want to fix."
 	fi
 }
 

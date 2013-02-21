@@ -151,6 +151,35 @@ parse_args() {
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
 
+	# process possible trailing arguments
+	length_old=0
+	for k in "${@:2}"
+	do
+		length_old=$[$length_old+1]
+	done
+	if [ "$length_old" -gt "0" ]; then
+		FLAGS "${@:2}" || exit $?
+		length_new=0
+		for l in ${FLAGS_ARGV[@]}
+		do
+			length_new=$[$length_new+1]
+		done
+		if [ "$length_new" -gt "0" ] && [ "$length_new" != "$length_old" ]; then
+			die "Putting flags between the two main arguments is not a good idea! Process aborted."
+		fi
+		if [ "$length_new" == "$length_old" ]; then
+			FLAGS "${@:3}" || exit $?
+			length_newnew=0
+			for l in ${FLAGS_ARGV[@]}
+			do
+				length_newnew=$[$length_newnew+1]
+			done
+			if [ "$length_newnew" == "$length_old" ]; then
+				die "Too many arguments have been found!"
+			fi
+		fi
+	fi
+
 	# read arguments into global variables
 	VERSION=$1
 	# check whether the user has already added the version tag prefix or not
@@ -248,6 +277,7 @@ cmd_start() {
 	require_branch_absent "$NEW_BRANCH"
 	git_do remote update >/dev/null 2>&1 || \
 	  die "Could not update remote branches from $ORIGIN."
+	git_do remote prune origin >/dev/null 2>&1
 	if has $ORIGIN/$NEW_BRANCH $(git_all_branches); then
 		die "There is an existing hotfix branch ($ORIGIN/$NEW_BRANCH). Finish that one first."
 	fi
@@ -272,7 +302,7 @@ cmd_start() {
 	if ! git_do checkout -b "$NEW_BRANCH" "$VERSION_PREFIX$VERSION" >/dev/null 2>&1; then
 		die "Could not create hotfix branch '$NEW_BRANCH'"
 	else
-		git_do push origin "$NEW_BRANCH" >/dev/null 2>&1
+		git_do push -u origin "$NEW_BRANCH" >/dev/null 2>&1
 	fi
 
 	echo
@@ -299,7 +329,8 @@ cmd_publish() {
 	require_clean_working_tree
 	require_branch "$BRANCH"
 	git_do fetch -q "$ORIGIN" >/dev/null 2>&1 || \
-	  die "Could not fetch from $ORIGIN
+	  die "Could not fetch from $ORIGIN."
+	git_do remote prune origin >/dev/null 2>&1
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	# create remote branch
@@ -328,8 +359,9 @@ cmd_track() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch_absent "$BRANCH"
-	git_do fetch -q "$ORIGIN"  >/dev/null 2>&1 || \
-	  die "Could not fetch from $OR
+	git_do fetch -q "$ORIGIN" >/dev/null 2>&1 || \
+	  die "Could not fetch from $ORIGIN."
+	git_do remote prune origin >/dev/null 2>&1
 	require_branch "$ORIGIN/$BRANCH"
 
 	# create tracking branch
@@ -368,6 +400,7 @@ cmd_finish() {
 	  die "Could not check out $BRANCH."
 	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not fetch $BRANCH from $ORIGIN."
+	git_do remote prune origin >/dev/null 2>&1
 	require_branch "$ORIGIN/$BRANCH"
 	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1 || \
 	  die "There were merge conflicts on $BRANCH. Resolve them using git mergetool."
@@ -529,7 +562,7 @@ cmd_finish() {
 ##		  die "Could not check out $MASTER_BRANCH."
 ##		git_do checkout "$previoustag" >/dev/null 2>&1 || \
 ##		  die "Could not check out $previoustag."
-##		git_do commit --amend -v >/dev/null 2>&1 || \
+##		git_do commit --amend -v --quiet || \
 ##		  die "There were merge conflicts."
 ##		  # TODO: What do we do now?
 #		git_do merge --no-ff "$MASTER_BRANCH" >/dev/null 2>&1 || \
@@ -561,7 +594,8 @@ cmd_finish() {
 		  die "Could not check out $BRANCH."
 #		git_do branch -d "$BRANCH" >/dev/null 2>&1
 		git_do branch -D "$BRANCH" >/dev/null 2>&1
-		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
+		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1 || \
+		  die "Could not delete the remote $BRANCH in $ORIGIN."
 	fi
 
 	echo
@@ -619,15 +653,24 @@ cmd_delete() {
 	git_do branch -D "$BRANCH" >/dev/null 2>&1
 
 	if ! flag local; then
-		# delete remote branch
-		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
+		# make sure that the remote branch should be deleted as well
+		read -p "Are you sure that you want to delete the remote branch as well (Y/N)? " answer
+		if [ "$answer" == "y" ] || [ "$answer" == "Y" ] || [ "$answer" == "yes" ] || [ "$answer" == "Yes" ] || [ "$answer" == "YES" ]; then
+			# delete remote branch
+#			git_do remote prune origin >/dev/null 2>&1
+			git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
+		else
+			answer="false"
+		fi
 	fi
 
 	echo
 	echo "Summary of actions:"
 	echo "- The local branch '$BRANCH' has been deleted"
 	if ! flag local; then
-		echo "- The remote branch '$ORIGIN/$BRANCH' has been deleted"
+		if [ "$answer" != "false" ]; then
+			echo "- The remote branch '$ORIGIN/$BRANCH' has been deleted"
+		fi
 	fi
 	echo "- You are now on branch '$DEVELOP_BRANCH'"
 	echo
