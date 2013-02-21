@@ -1,0 +1,72 @@
+#
+# git-flow -- A collection of Git extensions to provide high-level
+# repository operations for Vincent Driessen's branching model.
+#
+# Original blog post presenting this model is found at:
+#    http://nvie.com/git-model
+#
+# Feel free to contribute to this project at:
+#    http://github.com/nvie/gitflow
+#
+# Copyright 2010 Vincent Driessen. All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+#    1. Redistributions of source code must retain the above copyright notice,
+#       this list of conditions and the following disclaimer.
+# 
+#    2. Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED BY VINCENT DRIESSEN ``AS IS'' AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL VINCENT DRIESSEN OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# The views and conclusions contained in the software and documentation are
+# those of the authors and should not be interpreted as representing official
+# policies, either expressed or implied, of Vincent Driessen.
+#
+
+init() {
+  require_git_repo
+  require_gitflow_initialized
+  gitflow_load_settings
+  BRANCH=$(git_do branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g')
+}
+
+usage() {
+#	echo "usage: $GITFLOW_COMMAND reset <commit_message>"
+	echo "usage: $GITFLOW_COMMAND reset <arguments>"
+	echo "       see the git reset man page for further information"
+}
+
+cmd_default() {
+	# record changes to the local and the remote repository
+	git_do reset "$@" >/dev/null 2>&1 || \
+	  die "Could not reset HEAD of local repository $BRANCH."
+	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
+	  git_do remote prune origin >/dev/null 2>&1 && die "Could not fetch $BRANCH from $ORIGIN."
+#	  die "Could not fetch $BRANCH from $ORIGIN. ('git remote prune origin' could be useful)"
+	git_do push origin "$BRANCH" >/dev/null 2>&1 || \
+	  die "Could not push to $BRANCH from $ORIGIN."
+
+	echo
+	echo "Summary of actions:"
+#	echo "- Latest objects have been fetched from '$ORIGIN'"
+	echo "- HEAD of the local and the remote branch '$BRANCH' has been reset"
+	echo  
+}
+
+cmd_help() {
+	usage
+	exit 0
+}
