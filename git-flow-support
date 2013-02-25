@@ -67,6 +67,7 @@ cmd_list() {
 	support_branches=$(echo "$(git_local_branches)" | grep "^$PREFIX")
 	git_do remote update >/dev/null 2>&1 || \
 	  die "Could not update remote branches from $ORIGIN."
+	git_do remote prune origin >/dev/null 2>&1
 	local remote_support_branches
 	remote_support_branches=$(echo "$(git_remote_branches)" | grep "^$REMOTE_PREFIX")
 	if [ -z "$support_branches" ] && [ -z "$remote_support_branches" ]; then
