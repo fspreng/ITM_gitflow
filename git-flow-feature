@@ -47,7 +47,7 @@ init() {
 usage() {
 	echo "usage: $GITFLOW_COMMAND feature [list] [-v]"
 	echo "       $GITFLOW_COMMAND feature start [-F] <name> [<base>]"
-	echo "       $GITFLOW_COMMAND feature finish [-rFkDS] [<name|nameprefix>]"
+	echo "       $GITFLOW_COMMAND feature finish [-rFkDS] <name|nameprefix>"
 	echo "       $GITFLOW_COMMAND feature delete [-l] <name>"
 	echo "       $GITFLOW_COMMAND feature publish <name>"
 	echo "       $GITFLOW_COMMAND feature track <name>"
@@ -334,6 +334,7 @@ cmd_finish() {
 	DEFINE_boolean force_delete false "force delete feature branch after finish" D
 	DEFINE_boolean squash false "squash feature during merge" S
 	parse_args "$@"
+	require_name_arg
 	expand_nameprefix_arg_or_current
 
 	# sanity checks
