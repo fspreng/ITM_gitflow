@@ -47,10 +47,14 @@ fi
 
 # The sed expression here replaces all backslashes by forward slashes.
 # This helps our Windows users, while not bothering our Unix users.
-GITFLOW_DIR__=`dirname $0`
-echo $GITFLOW_DIR__
-exit
-export GITFLOW_DIR='/home/itm/itmsw/pasimodo/x86_64/software/gitflow'
+pushd . > /dev/null
+GITFLOW_DIR="${BASH_SOURCE[0]}";
+if ([ -h "${GITFLOW_DIR}" ]) then
+  while([ -h "${GITFLOW_DIR}" ]) do cd `dirname "$GITFLOW_DIR"`; GITFLOW_DIR=`readlink "${GITFLOW_DIR}"`; done
+fi
+cd `dirname ${GITFLOW_DIR}` > /dev/null
+export GITFLOW_DIR=`pwd`;
+popd  > /dev/null
 gitflow_command=$(git config --get gitflow.prefix.command)
 
 usage() {
