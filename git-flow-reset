@@ -54,8 +54,8 @@ cmd_default() {
 	git_do reset "$@" >/dev/null 2>&1 || \
 	  die "Could not reset HEAD of local repository $BRANCH."
 	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
-	  git_do remote prune origin >/dev/null 2>&1 && die "Could not fetch $BRANCH from $ORIGIN."
-#	  die "Could not fetch $BRANCH from $ORIGIN. ('git remote prune origin' could be useful)"
+#	  git_do remote prune origin >/dev/null 2>&1 && die "Could not fetch $BRANCH from $ORIGIN."
+	  die "Could not fetch $BRANCH from $ORIGIN. ('git remote prune origin' could be useful)"
 	git_do push origin "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not push to $BRANCH from $ORIGIN."
 
