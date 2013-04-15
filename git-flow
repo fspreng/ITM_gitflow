@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # git-flow -- A collection of Git extensions to provide high-level
 # repository operations for Vincent Driessen's branching model.
@@ -47,6 +47,9 @@ fi
 
 # The sed expression here replaces all backslashes by forward slashes.
 # This helps our Windows users, while not bothering our Unix users.
+GITFLOW_DIR__=`dirname $0`
+echo $GITFLOW_DIR__
+exit
 export GITFLOW_DIR='/home/itm/itmsw/pasimodo/x86_64/software/gitflow'
 gitflow_command=$(git config --get gitflow.prefix.command)
 
