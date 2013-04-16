@@ -283,6 +283,7 @@ cmd_start() {
 	require_name_arg
 
 	# sanity checks
+	require_clean_working_tree
 	require_branch_absent "$BRANCH"
 	git_do remote update >/dev/null 2>&1 || \
 	  die "Could not update remote branches from $ORIGIN."
@@ -309,7 +310,7 @@ cmd_start() {
 
 	# create the local branch and the corresponding remote branch
 	if ! git_do checkout -b "$BRANCH" "$BASE" >/dev/null 2>&1; then
-		die "Could not create feature branch '$BRANCH'"
+		die "Could not create feature branch '$BRANCH'."
 	else
 		git_do push -u origin "$BRANCH" >/dev/null 2>&1 || \
 		  die "Could not push to $BRANCH from $ORIGIN."
@@ -338,6 +339,7 @@ cmd_finish() {
 	expand_nameprefix_arg_or_current
 
 	# sanity checks
+	require_clean_working_tree
 	require_branch "$BRANCH"
 	git_do checkout "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not check out $BRANCH."
@@ -506,6 +508,7 @@ cmd_delete() {
 
 	# sanity checks
 #	require_branch "$BRANCH"
+	require_clean_working_tree
 
 	# change to branch develop
 	git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \

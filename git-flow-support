@@ -267,6 +267,7 @@ cmd_delete() {
 
 	# sanity checks
 #	require_branch "$BRANCH"
+	require_clean_working_tree
 
 	# change to branch develop
 	git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
