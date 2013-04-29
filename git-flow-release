@@ -372,10 +372,14 @@ cmd_finish() {
 #			  die "Could not fetch $BRANCH from $ORIGIN."
 			git_do checkout "$MASTER_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not check out $MASTER_BRANCH."
+			# Basically, the additional fetch is not necessary, but can be useful when the
+			# subsequent pull fails
 			git_do fetch -q "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not fetch $MASTER_BRANCH from $ORIGIN."
-			git_do merge --no-commit "$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1 || \
+			git_do pull -q --no-commit "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || \
 			  die "There were merge conflicts on $MASTER_BRANCH. Resolve them using git mergetool."
+#			git_do merge --no-commit "$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1 || \
+#			  die "There were merge conflicts on $MASTER_BRANCH. Resolve them using git mergetool."
 #			git_do push origin "$MASTER_BRANCH" >/dev/null 2>&1 || \
 #			  die "Could not push to $MASTER_BRANCH from $ORIGIN."
 		fi
@@ -410,10 +414,14 @@ cmd_finish() {
 		# but the merge into develop was successful, we skip it now
 		git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not check out $DEVELOP_BRANCH."
+		# Basically, the additional fetch is not necessary, but can be useful when the
+		# subsequent pull fails
 		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
-		git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+		git_do pull -q --no-commit "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+#		git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+#		  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
 		git_do push origin "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
 		if ! git_is_branch_merged_into "$BRANCH" "$ORIGIN/$DEVELOP_BRANCH"; then

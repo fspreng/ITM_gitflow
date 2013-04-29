@@ -402,10 +402,14 @@ cmd_finish() {
 #			git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1
 			git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not check out $DEVELOP_BRANCH."
+			# Basically, the additional fetch is not necessary, but can be useful when the
+			# subsequent pull fails
 			git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
-			git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+			git_do pull -q --no-commit "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 			  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+#			git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+#			  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
 			git_do push origin "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
 		fi
