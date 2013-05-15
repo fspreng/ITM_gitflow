@@ -370,7 +370,7 @@ cmd_track() {
 
 	echo
 	echo "Summary of actions:"
-	echo "- A new remote tracking branch '$BRANCH' was created"
+	echo "- A new local tracking branch '$BRANCH' was created"
 	echo "- You are now on branch '$BRANCH'"
 	echo
 }
