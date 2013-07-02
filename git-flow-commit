@@ -64,7 +64,7 @@ cmd_default() {
 		# record changes to the local and the remote repository
 #		git_do commit -a --quiet -m "$MESSAGE" || \
 		git_do commit "$@" --quiet || \
-		  die "Could not commit changes to local repository $BRANCH."
+		  die "Could not commit changes to local branch $BRANCH."
 		git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
 #		  (git_do remote prune origin >/dev/null 2>&1 && die "Could not fetch $BRANCH from $ORIGIN.")
 		  die "Could not fetch $BRANCH from $ORIGIN. ('git remote prune origin' could be useful)"

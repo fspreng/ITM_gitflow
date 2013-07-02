@@ -392,6 +392,58 @@ cmd_finish() {
 		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
 
+	# if a new release version of Pasimodo is finished, some additional versioning tasks have to be performed
+	# (formerly done by the script called "versioned_git_ci")
+	# find the directory named versioning and enter it
+	local level_counter=0
+	local found=0
+	while [ "$found" == 0 ] && [ "$level_counter" -lt "15" ]; do
+		if [ -d "versioning" ]; then
+			cd versioning
+			found=1
+		else
+			cd ..
+			level_counter=$(($level_counter+1))
+		fi
+	done
+	# extract the major and the minor tag of the Pasimodo release version to be finished
+	if [ "$found" == 1 ]; then
+		git_do checkout "$BRANCH" >/dev/null 2>&1 || \
+		  die "Could not check out $BRANCH."
+		local majortag=0
+		local minortag=0
+		local hotfixtag=0
+		local shorttag=$VERSION
+		local nextdot
+		nextdot=$(expr index "$shorttag" .)
+		((nextdot-=1))
+		majortag=${shorttag:0:nextdot}
+		shorttag=${shorttag: ((nextdot+=1))}
+		nextdot=$(expr index "$shorttag" .)
+		((nextdot-=1))
+		minortag=${shorttag:0:nextdot}
+		if [ -f "Pasimodo_Version.txt" ]; then
+			echo -e $majortag'\n'$minortag > Pasimodo_Version.txt
+		fi
+		if [ -f "Pasimodo_Revision.txt" ]; then
+			echo -e $hotfixtag > Pasimodo_Revision.txt
+		fi
+		local year=$(date +%Y)
+		local month=$(date +%m)
+		local day=$(date +%d)
+		local hour=$(date +%H)
+		local minute=$(date +%M)
+		local second=$(date +%S)
+		local time="$year/$month/$day $hour:$minute:$second"
+		if [ -f "CMake_Pasimodo_Revision.txt" ]; then
+			echo -e "SET(Pasimodo_MAJOR_VERSION $majortag)\nSET(Pasimodo_MINOR_VERSION $minortag)\nSET(Pasimodo_REVISION_TIME \"$time\")\nSET(Pasimodo_REVISION $hotfixtag)" > CMake_Pasimodo_Revision.txt
+		fi
+		git_do commit --quiet -a -m "Some final modifications before Pasimodo version $VERSION is ready to be released" || \
+		  die "Could not commit changes to local branch $BRANCH."
+		git_do push origin "$BRANCH" >/dev/null 2>&1 || \
+		  die "Could not push to $BRANCH from $ORIGIN."
+	fi
+
 	if ! flag onlymaster; then
 		# try to merge into develop
 		# in case a previous attempt to finish this release branch has failed,
