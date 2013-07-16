@@ -203,15 +203,14 @@ parse_args() {
 		local tag
 		for tag in $(git_do for-each-ref refs/tags/ --format='%(refname)'); do
 			if { echo "$tag" | grep -q "$VERSION"; } then
-				local len=8+${#VERSION}+${#VERSION}+1
+				local len=10+${#VERSION_PREFIX}
 				local shorttag
 				shorttag=${tag:len}
 				local nextdot
 				nextdot=$(expr index "$shorttag" .)
-				if [[ "$nextdot" -gt 0 ]]; then
-					((nextdot-=1))
-					shorttag=${shorttag:0:nextdot}
-				fi
+				shorttag=${shorttag:nextdot}
+				nextdot=$(expr index "$shorttag" .)
+				shorttag=${shorttag:nextdot}
 				if [[ "$shorttag" -gt "$last" ]]; then
 					last=$shorttag
 				fi
@@ -226,15 +225,16 @@ parse_args() {
 		local nextdot
 		nextdot=$(expr index "$VERSION" .)
 		local prefix
-		prefix=${VERSION:0: nextdot+1}
+		prefix=${VERSION:0: nextdot-1}
 		local suffix
 		suffix=${VERSION:nextdot}
 		nextdot=$(expr index "$suffix" .)
 		local last
 		last=${suffix:nextdot}
+		suffix=${suffix:0: nextdot-1}
 		((newlast=last+1))
-		NEW_BRANCH=$PREFIX$VERSION_PREFIX$prefix.$newlast
-		NEW_VERSION=$prefix.$newlast
+		NEW_BRANCH=$PREFIX$VERSION_PREFIX$prefix.$suffix.$newlast
+		NEW_VERSION=$prefix.$suffix.$newlast
 	elif [[ "${#number_dots}" -gt 2 ]]; then
 		die "Subhotfix branches are not supported."
 	fi
