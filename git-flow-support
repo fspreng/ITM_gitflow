@@ -65,8 +65,10 @@ cmd_list() {
 	local current_branch
 	local short_names
 	support_branches=$(echo "$(git_local_branches)" | grep "^$PREFIX")
+	echo "Executing Git command 'git remote update'"
 	git_do remote update >/dev/null 2>&1 || \
 	  die "Could not update remote branches from $ORIGIN."
+	echo "Executing Git command 'git remote prune origin'"
 	git_do remote prune origin >/dev/null 2>&1
 	local remote_support_branches
 	remote_support_branches=$(echo "$(git_remote_branches)" | grep "^$REMOTE_PREFIX")
@@ -202,6 +204,7 @@ require_base_arg() {
 }
 
 require_base_is_on_master() {
+	echo "Executing Git command 'git branch --no-color --contains $BASE'"
 	if ! git branch --no-color --contains "$BASE" 2>/dev/null \
 			| sed 's/[* ] //g' \
 	  		| grep -q "^$MASTER_BRANCH\$"; then
@@ -221,18 +224,24 @@ cmd_start() {
 
 	# update the local repo with remote changes, if asked
 	if flag fetch; then
+		echo "Executing Git command 'git checkout $BASE'"
 		git_do checkout "$BASE" >/dev/null 2>&1 || \
 		  die "Could not check out $BASE."
+		echo "Executing Git command 'git fetch -q $ORIGIN $BASE'"
 		git_do fetch -q "$ORIGIN" "$BASE" >/dev/null 2>&1 || \
 		  die "Could not fetch $BASE from $ORIGIN."
+		echo "Executing Git command 'git merge --no-commit $ORIGIN/$BASE'"
 		git_do merge --no-commit "$ORIGIN/$BASE" >/dev/null 2>&1  || \
 		  die "There were merge conflicts on $BASE. Resolve them using git mergetool."
+		echo "Executing Git command 'git push origin $BASE'"
 		git_do push origin "$BASE" >/dev/null 2>&1 || \
 		  die "Could not push to $BASE from $ORIGIN."
 	fi
 	require_branch_absent "$BRANCH"
+	echo "Executing Git command 'git remote update'"
 	git_do remote update >/dev/null 2>&1 || \
 	  die "Could not update remote branches from $ORIGIN."
+	echo "Executing Git command 'git remote prune origin'"
 	git_do remote prune origin >/dev/null 2>&1
 	require_branch_absent "$ORIGIN/$BRANCH"
 
@@ -243,11 +252,14 @@ cmd_start() {
 	fi
 
 	# create the local branch and the corresponding remote branch
+	echo "Executing Git command 'git checkout -b $BRANCH $BASE'"
 	if ! git_do checkout -b "$BRANCH" "$BASE" >/dev/null 2>&1; then
+		echo "Executing Git command 'git checkout -b $BRANCH $ORIGIN/$BASE'"
 		if ! git_do checkout -b "$BRANCH" "$ORIGIN/$BASE" >/dev/null 2>&1; then
 			die "Could not create support branch '$BRANCH'"
 		fi
 	else
+		echo "Executing Git command 'git push -u origin $BRANCH'"
 		git_do push -u origin "$BRANCH" >/dev/null 2>&1
 	fi
 
@@ -270,10 +282,12 @@ cmd_delete() {
 	require_clean_working_tree
 
 	# change to branch develop
+	echo "Executing Git command 'git checkout $DEVELOP_BRANCH'"
 	git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 	  die "Could not check out $DEVELOP_BRANCH."
 
 	# delete local branch
+	echo "Executing Git command 'git branch -D $BRANCH'"
 	git_do branch -D "$BRANCH" >/dev/null 2>&1
 
 	if ! flag local; then
@@ -281,7 +295,9 @@ cmd_delete() {
 		read -p "Are you sure that you want to delete the remote branch as well (Y/N)? " answer
 		if [ "$answer" == "y" ] || [ "$answer" == "Y" ] || [ "$answer" == "yes" ] || [ "$answer" == "Yes" ] || [ "$answer" == "YES" ]; then
 			# delete remote branch
+#			echo "Executing Git command 'git remote prune origin'"
 #			git_do remote prune origin >/dev/null 2>&1
+			echo "Executing Git command 'git push $ORIGIN :refs/heads/$BRANCH'"
 			git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
 		else
 			answer="false"

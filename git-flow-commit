@@ -62,14 +62,20 @@ cmd_default() {
 #	require_message_arg
 	if ! git_is_clean_working_tree; then
 		# record changes to the local and the remote repository
+#		echo "Executing Git command 'git commit -a --quiet -m \"$MESSAGE\"'"
 #		git_do commit -a --quiet -m "$MESSAGE" || \
+		echo "Executing Git command 'git commit $@ --quiet'"
 		git_do commit "$@" --quiet || \
 		  die "Could not commit changes to local branch $BRANCH."
+		echo "Executing Git command 'git fetch -q $ORIGIN $BRANCH'"
 		git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
+#		echo "Executing Git command 'git remote prune origin'"
 #		  (git_do remote prune origin >/dev/null 2>&1 && die "Could not fetch $BRANCH from $ORIGIN.")
 		  die "Could not fetch $BRANCH from $ORIGIN. ('git remote prune origin' could be useful)"
+		echo "Executing Git command 'git merge --no-commit $ORIGIN/$BRANCH'"
 		git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1  || \
 		  die "There were merge conflicts. Resolve them using git mergetool."
+		echo "Executing Git command 'git push origin $BRANCH'"
 		git_do push origin "$BRANCH" >/dev/null 2>&1 || \
 		  die "Could not push to $BRANCH from $ORIGIN."
 

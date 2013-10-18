@@ -67,8 +67,10 @@ cmd_list() {
 	local current_branch
 	local short_names
 	release_branches=$(echo "$(git_local_branches)" | grep "^$PREFIX")
+	echo "Executing Git command 'git remote update'"
 	git_do remote update >/dev/null 2>&1 || \
 	  die "Could not update remote branches from $ORIGIN."
+	echo "Executing Git command 'git remote prune origin'"
 	git_do remote prune origin >/dev/null 2>&1
 	local remote_release_branches
 	remote_release_branches=$(echo "$(git_remote_branches)" | grep "^$REMOTE_PREFIX")
@@ -253,6 +255,7 @@ require_major_minor_arg() {
 }
 
 require_base_is_on_develop() {
+	echo "Executing Git command 'git branch --no-color --contains $BASE'"
 	if ! git_do branch --no-color --contains "$BASE" 2>/dev/null \
 			| sed 's/[* ] //g' \
 	  		| grep -q "^$DEVELOP_BRANCH\$"; then
@@ -288,19 +291,25 @@ cmd_start() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch_absent "$BRANCH"
+	echo "Executing Git command 'git remote update'"
 	git_do remote update >/dev/null 2>&1 || \
 	  die "Could not update remote branches from $ORIGIN."
+	echo "Executing Git command 'git remote prune origin'"
 	git_do remote prune origin >/dev/null 2>&1
 	require_no_existing_remote_release_branches
 #	require_branch_absent "$ORIGIN/$BRANCH"
 	require_tag_absent "$VERSION_PREFIX$VERSION"
 	if flag fetch; then
+		echo "Executing Git command 'git checkout $DEVELOP_BRANCH'"
 		git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not check out $DEVELOP_BRANCH."
+		echo "Executing Git command 'git fetch -q $ORIGIN $DEVELOP_BRANCH'"
 		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
+		echo "Executing Git command 'git merge --no-commit $ORIGIN/$DEVELOP_BRANCH'"
 		git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1  || \
 		  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+		echo "Executing Git command 'git push origin $DEVELOP_BRANCH'"
 		git_do push origin "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
 	fi
@@ -311,9 +320,11 @@ cmd_start() {
 	fi
 
 	# create the local branch and the corresponding remote branch
+	echo "Executing Git command 'git checkout -b $BRANCH $DEVELOP_BRANCH'"
 	if ! git_do checkout -b "$BRANCH" "$DEVELOP_BRANCH" >/dev/null 2>&1; then
 		die "Could not create release branch '$BRANCH'"
 	else
+		echo "Executing Git command 'git push -u origin $BRANCH'"
 		git_do push -u origin "$BRANCH" >/dev/null 2>&1
 	fi
 
@@ -355,31 +366,42 @@ cmd_finish() {
 	# sanity checks
 	require_branch "$BRANCH"
 	require_clean_working_tree
+	echo "Executing Git command 'git checkout $BRANCH'"
 	git_do checkout "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not check out $BRANCH."
+	echo "Executing Git command 'git fetch -q $ORIGIN $BRANCH'"
 	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not fetch $BRANCH from $ORIGIN."
+	echo "Executing Git command 'git remote prune origin'"
 	git_do remote prune origin >/dev/null 2>&1
 	require_branch "$ORIGIN/$BRANCH"
+	echo "Executing Git command 'git merge --no-commit $ORIGIN/$BRANCH'"
 	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1 || \
 	  die "There were merge conflicts on $BRANCH. Resolve them using git mergetool."
+	echo "Executing Git command 'git push origin $BRANCH'"
 	git_do push origin "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not push to $BRANCH from $ORIGIN."
 	# branch $ORIGIN/$BRANCH should be existent, but check it anyway...
 	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
 		if flag fetch; then
+#			echo "Executing Git command 'git fetch -q $ORIGIN $BRANCH'"
 #			git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
 #			  die "Could not fetch $BRANCH from $ORIGIN."
+			echo "Executing Git command 'git checkout $MASTER_BRANCH'"
 			git_do checkout "$MASTER_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not check out $MASTER_BRANCH."
 			# Basically, the additional fetch is not necessary, but can be useful when the
 			# subsequent pull fails
+			echo "Executing Git command 'git fetch -q $ORIGIN $MASTER_BRANCH'"
 			git_do fetch -q "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not fetch $MASTER_BRANCH from $ORIGIN."
+			echo "Executing Git command 'git pull -q --no-commit $ORIGIN $MASTER_BRANCH'"
 			git_do pull -q --no-commit "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || \
 			  die "There were merge conflicts on $MASTER_BRANCH. Resolve them using git mergetool."
+#			echo "Executing Git command 'git merge --no-commit $ORIGIN/$MASTER_BRANCH'"
 #			git_do merge --no-commit "$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1 || \
 #			  die "There were merge conflicts on $MASTER_BRANCH. Resolve them using git mergetool."
+#			echo "Executing Git command 'git push origin $MASTER_BRANCH'"
 #			git_do push origin "$MASTER_BRANCH" >/dev/null 2>&1 || \
 #			  die "Could not push to $MASTER_BRANCH from $ORIGIN."
 		fi
@@ -408,6 +430,7 @@ cmd_finish() {
 	done
 	# extract the major and the minor tag of the Pasimodo release version to be finished
 	if [ "$found" == 1 ]; then
+		echo "Executing Git command 'git checkout $BRANCH'"
 		git_do checkout "$BRANCH" >/dev/null 2>&1 || \
 		  die "Could not check out $BRANCH."
 		local majortag=0
@@ -438,8 +461,10 @@ cmd_finish() {
 		if [ -f "CMake_Pasimodo_Revision.txt" ]; then
 			echo -e "SET(Pasimodo_MAJOR_VERSION $majortag)\nSET(Pasimodo_MINOR_VERSION $minortag)\nSET(Pasimodo_REVISION_TIME \"$time\")\nSET(Pasimodo_REVISION $hotfixtag)" > CMake_Pasimodo_Revision.txt
 		fi
+		echo "Executing Git command 'git commit --quiet -a -m \"Some final modifications before Pasimodo version $VERSION is ready to be released\"'"
 		git_do commit --quiet -a -m "Some final modifications before Pasimodo version $VERSION is ready to be released" || \
 		  die "Could not commit changes to local branch $BRANCH."
+		echo "Executing Git command 'git push origin $BRANCH'"
 		git_do push origin "$BRANCH" >/dev/null 2>&1 || \
 		  die "Could not push to $BRANCH from $ORIGIN."
 	fi
@@ -448,35 +473,46 @@ cmd_finish() {
 		# try to merge into develop
 		# in case a previous attempt to finish this release branch has failed,
 		# but the merge into develop was successful, we skip it now
+		echo "Executing Git command 'git checkout $DEVELOP_BRANCH'"
 		git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not check out $DEVELOP_BRANCH."
 		# Basically, the additional fetch is not necessary, but can be useful when the
 		# subsequent pull fails
+		echo "Executing Git command 'git fetch -q $ORIGIN $DEVELOP_BRANCH'"
 		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
+		echo "Executing Git command 'git pull -q --no-commit $ORIGIN $DEVELOP_BRANCH'"
 		git_do pull -q --no-commit "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+#		echo "Executing Git command 'git merge --no-commit $ORIGIN/$DEVELOP_BRANCH'"
 #		git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 #		  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+		echo "Executing Git command 'git push origin $DEVELOP_BRANCH'"
 		git_do push origin "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
 		if ! git_is_branch_merged_into "$BRANCH" "$ORIGIN/$DEVELOP_BRANCH"; then
+#			echo "Executing Git command 'git checkout $DEVELOP_BRANCH'"
 #			git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 #			  die "Could not check out $DEVELOP_BRANCH."
 			# TODO: Actually, accounting for 'git describe' pays, so we should
 			# ideally git merge --no-ff $tagname here, instead!
 			if noflag squash; then
+				echo "Executing Git command 'git merge --no-ff $BRANCH'"
 				git_do merge --no-ff "$BRANCH" >/dev/null 2>&1 || \
 				  die "There were merge conflicts."
 				  # TODO: What do we do now?
 			else
+				echo "Executing Git command 'git merge --squash $BRANCH'"
 				git_do merge --squash "$BRANCH" >/dev/null 2>&1 || \
 				  die "There were merge conflicts."
 				  # TODO: What do we do now?
+				echo "Executing Git command 'git commit --quiet'"
 				git_do commit --quiet 
 			fi
+			echo "Executing Git command 'git push $ORIGIN $DEVELOP_BRANCH'"
 			git_do push "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
+			echo "Executing Git command 'git checkout $BRANCH'"
 			git_do checkout "$BRANCH" >/dev/null 2>&1 || \
 			  die "Could not check out $BRANCH."
 		fi
@@ -486,15 +522,19 @@ cmd_finish() {
 	# in case a previous attempt to finish this release branch has failed,
 	# but the merge into master was successful, we skip it now
 	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
+		echo "Executing Git command 'git checkout $MASTER_BRANCH'"
 		git_do checkout "$MASTER_BRANCH" >/dev/null 2>&1  || \
 		  die "Could not check out $MASTER_BRANCH."
 		if noflag squash; then
+			echo "Executing Git command 'git merge --no-ff $BRANCH'"
 			git_do merge --no-ff "$BRANCH" >/dev/null 2>&1  || \
 				die "There were merge conflicts."
 				# TODO: What do we do now?
 		else
+			echo "Executing Git command 'git merge --squash $BRANCH'"
 			git_do merge --squash "$BRANCH" >/dev/null 2>&1 || \
 				die "There were merge conflicts."
+			echo "Executing Git command 'git commit --quiet'"
 			git_do commit --quiet 
 		fi
 	fi
@@ -510,27 +550,34 @@ cmd_finish() {
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
 			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			echo "Executing Git command 'git tag $opts $tagname $MASTER_BRANCH'"
 			eval git_do tag $opts "$tagname" "$MASTER_BRANCH" || \
 			  die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
 
 	if flag push; then
+		echo "Executing Git command 'git push $ORIGIN $MASTER_BRANCH'"
 		git_do push "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || \
 			die "Could not push to $MASTER_BRANCH from $ORIGIN."
 		if noflag notag; then
+			echo "Executing Git command 'git push --tags $ORIGIN'"
 			git_do push --tags "$ORIGIN" >/dev/null 2>&1 || \
 			  die "Could not push tags to $ORIGIN."
 		fi
+#		echo "Executing Git command 'git push $ORIGIN :$BRANCH'"
 #		git_do push "$ORIGIN" :"$BRANCH" >/dev/null 2>&1 || \
 #			die "Could not delete the remote $BRANCH in $ORIGIN."
 	fi
 
 	# delete branch
 	if noflag keep; then
+		echo "Executing Git command 'git checkout $DEVELOP_BRANCH'"
 		git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not check out $BRANCH."
+		echo "Executing Git command 'git branch -d $BRANCH'"
 		git_do branch -d "$BRANCH" >/dev/null 2>&1
+		echo "Executing Git command 'git push $ORIGIN :refs/heads/$BRANCH'"
 		git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1 || \
 		  die "Could not delete the remote $BRANCH in $ORIGIN."
 	fi
@@ -570,17 +617,24 @@ cmd_publish() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch "$BRANCH"
+	echo "Executing Git command 'git fetch -q $ORIGIN'"
 	git_do fetch -q "$ORIGIN" >/dev/null 2>&1
+	echo "Executing Git command 'git remote prune origin'"
 	git_do remote prune origin >/dev/null 2>&1
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	# create remote branch
+	echo "Executing Git command 'git push $ORIGIN $BRANCH:refs/heads/$BRANCH'"
 	git_do push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH" >/dev/null 2>&1
+	echo "Executing Git command 'git fetch -q $ORIGIN'"
 	git_do fetch -q "$ORIGIN" >/dev/null 2>&1
 
 	# configure remote tracking
+	echo "Executing Git command 'git config branch.$BRANCH.remote $ORIGIN'"
 	git_do config "branch.$BRANCH.remote" "$ORIGIN" >/dev/null 2>&1
+	echo "Executing Git command 'git config branch.$BRANCH.merge refs/heads/$BRANCH'"
 	git_do config "branch.$BRANCH.merge" "refs/heads/$BRANCH" >/dev/null 2>&1
+	echo "Executing Git command 'git checkout $BRANCH'"
 	git_do checkout "$BRANCH" >/dev/null 2>&1
 
 	echo
@@ -599,12 +653,15 @@ cmd_track() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch_absent "$BRANCH"
+	echo "Executing Git command 'git fetch -q $ORIGIN'"
 	git_do fetch -q "$ORIGIN" >/dev/null 2>&1 || \
 	  die "Could not fetch from $ORIGIN."
+	echo "Executing Git command 'git remote prune origin'"
 	git_do remote prune origin >/dev/null 2>&1
 	require_branch "$ORIGIN/$BRANCH"
 
 	# create tracking branch
+	echo "Executing Git command 'git checkout -b $BRANCH $ORIGIN/$BRANCH'"
 	git_do checkout -b "$BRANCH" "$ORIGIN/$BRANCH" >/dev/null 2>&1
 
 	echo
@@ -623,10 +680,12 @@ cmd_delete() {
 	require_clean_working_tree
 
 	# change to branch develop
+	echo "Executing Git command 'git checkout $DEVELOP_BRANCH'"
 	git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 	  die "Could not check out $DEVELOP_BRANCH."
 
 	# delete local branch
+	echo "Executing Git command 'git branch -D $BRANCH'"
 	git_do branch -D "$BRANCH" >/dev/null 2>&1
 
 	if ! flag local; then
@@ -634,7 +693,9 @@ cmd_delete() {
 		read -p "Are you sure that you want to delete the remote branch as well (Y/N)? " answer
 		if [ "$answer" == "y" ] || [ "$answer" == "Y" ] || [ "$answer" == "yes" ] || [ "$answer" == "Yes" ] || [ "$answer" == "YES" ]; then
 			# delete remote branch
+#			echo "Executing Git command 'git remote prune origin'"
 #			git_do remote prune origin >/dev/null 2>&1
+			echo "Executing Git command 'git push $ORIGIN :refs/heads/$BRANCH'"
 			git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
 		else
 			answer="false"

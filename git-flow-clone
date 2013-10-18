@@ -62,12 +62,14 @@ cmd_default() {
 	require_source_arg
 	require_destination_arg
 	# clone new repository using standard git clone command
+	echo "Executing Git command 'git clone -b develop $SOURCE $DESTINATION'"
 	git_do clone -b develop $SOURCE $DESTINATION || \
 	  die "Could not clone git repository '$SOURCE' into '$DESTINATION'."
 	# modify acccess permissions of cloned repository
 	if [ "$DESTINATION" = "." ]; then
 		DESTINATION=$PWD
 	fi
+	echo "Executing command 'chmod -R o-rwx $DESTINATION'"
 	chmod -R o-rwx $DESTINATION
 	# initialize git-flow for cloned repository
 	cd "$DESTINATION/.git"
@@ -83,6 +85,7 @@ cmd_default() {
 	echo '	command = gf' >> config
 	# create the local master branch following the remote master
 	gitflow_load_settings
+	echo "Executing Git command 'git branch --track $MASTER_BRANCH $ORIGIN/$MASTER_BRANCH'"
 	git_do branch --track $MASTER_BRANCH $ORIGIN/$MASTER_BRANCH >/dev/null 2>&1 || \
 	  die "Could not create a local branch '$MASTER_BRANCH', based on the remote branch '$MASTER_BRANCH' from '$ORIGIN'."
 
