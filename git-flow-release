@@ -461,8 +461,8 @@ cmd_finish() {
 		local minute=$(date +%M)
 		local second=$(date +%S)
 		local time="$year/$month/$day $hour:$minute:$second"
-		if [ -f "CMake_Pasimodo_Revision.txt" ]; then
-			echo -e "SET(Pasimodo_MAJOR_VERSION $majortag)\nSET(Pasimodo_MINOR_VERSION $minortag)\nSET(Pasimodo_REVISION_TIME \"$time\")\nSET(Pasimodo_REVISION $hotfixtag)" > CMake_Pasimodo_Revision.txt
+		if [ -f "CMake_Pasimodo_Revision.cmake" ]; then
+			echo -e "SET(Pasimodo_MAJOR_VERSION $majortag)\nSET(Pasimodo_MINOR_VERSION $minortag)\nSET(Pasimodo_REVISION_TIME \"$time\")\nSET(Pasimodo_REVISION $hotfixtag)" > CMake_Pasimodo_Revision.cmake
 		fi
 		echo "Executing Git command 'git commit --quiet -a -m \"Some final modifications before Pasimodo version $VERSION is ready to be released\"'"
 		git_do commit --quiet -a -m "Some final modifications before Pasimodo version $VERSION is ready to be released" || \
