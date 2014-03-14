@@ -231,8 +231,10 @@ cmd_start() {
 		git_do fetch -q "$ORIGIN" "$BASE" >/dev/null 2>&1 || \
 		  die "Could not fetch $BASE from $ORIGIN."
 		echo "Executing Git command 'git merge --no-commit $ORIGIN/$BASE'"
-		git_do merge --no-commit "$ORIGIN/$BASE" >/dev/null 2>&1  || \
-		  die "There were merge conflicts on $BASE. Resolve them using git mergetool."
+		git_do merge --no-commit "$ORIGIN/$BASE" >/dev/null 2>&1  || {
+		  echo "*******************************************************************************"
+		  die "WARNING: There were merge conflicts on $BASE. Resolve them using git mergetool."
+		}
 		echo "Executing Git command 'git push origin $BASE'"
 		git_do push origin "$BASE" >/dev/null 2>&1 || \
 		  die "Could not push to $BASE from $ORIGIN."

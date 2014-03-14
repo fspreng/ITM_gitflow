@@ -303,8 +303,10 @@ cmd_start() {
 		git_do fetch -q "$ORIGIN" "$BASE" >/dev/null 2>&1 || \
 		  die "Could not fetch $BASE from $ORIGIN."
 		echo "Executing Git command 'git merge --no-commit $ORIGIN/$BASE'"
-		git_do merge --no-commit "$ORIGIN/$BASE" >/dev/null 2>&1  || \
-		  die "There were merge conflicts on $BASE. Resolve them using git mergetool."
+		git_do merge --no-commit "$ORIGIN/$BASE" >/dev/null 2>&1  || {
+		  echo "*******************************************************************************"
+		  die "WARNING: There were merge conflicts on $BASE. Resolve them using git mergetool."
+		}
 		echo "Executing Git command 'git push origin $BASE'"
 		git_do push origin "$BASE" >/dev/null 2>&1 || \
 		  die "Could not push to $BASE from $ORIGIN."
@@ -361,8 +363,10 @@ cmd_finish() {
 	git_do remote prune origin >/dev/null 2>&1
 	require_branch "$ORIGIN/$BRANCH"
 	echo "Executing Git command 'git merge --no-commit $ORIGIN/$BRANCH'"
-	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1 || \
-	  die "There were merge conflicts on $BRANCH. Resolve them using git mergetool."
+	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1 || {
+	  echo "*********************************************************************************"
+	  die "WARNING: There were merge conflicts on $BRANCH. Resolve them using git mergetool."
+	}
 	echo "Executing Git command 'git push origin $BRANCH'"
 	git_do push origin "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not push to $BRANCH from $ORIGIN."
@@ -425,11 +429,15 @@ cmd_finish() {
 			git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
 			echo "Executing Git command 'git pull -q --no-commit $ORIGIN $DEVELOP_BRANCH'"
-			git_do pull -q --no-commit "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
-			  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+			git_do pull -q --no-commit "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || {
+			  echo "*****************************************************************************************"
+			  die "WARNING: There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+			}
 #			echo "Executing Git command 'git merge --no-commit $ORIGIN/$DEVELOP_BRANCH'"
-#			git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1 || \
-#			  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+#			git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1 || {
+#			  echo "*****************************************************************************************"
+#			  die "WARNING: There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+#			}
 			echo "Executing Git command 'git push origin $DEVELOP_BRANCH'"
 			git_do push origin "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
@@ -482,12 +490,14 @@ cmd_finish() {
 		mkdir -p "$DOT_GIT_DIR/.gitflow"
 		echo "$DEVELOP_BRANCH" > "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
 		echo
+		echo "************************************************************************"
 		echo "There were merge conflicts. To resolve the merge conflict manually, use:"
 		echo "    git mergetool"
 		echo "    $GITFLOW_COMMAND commit"
 		echo 
 		echo "You can then complete the finish by running it again:"
 		echo "    $GITFLOW_COMMAND feature finish $NAME"
+		echo "************************************************************************"
 		echo
 		exit 1
 	fi
@@ -782,8 +792,10 @@ cmd_update() {
 	git_do fetch -q "$ORIGIN" "$base" >/dev/null 2>&1 || \
 	  die "Could not fetch $base from $ORIGIN."
 	echo "Executing Git command 'git merge --no-commit $ORIGIN/$base'"
-	git_do merge --no-commit "$ORIGIN/$base" >/dev/null 2>&1  || \
-	  die "There were merge conflicts on $base. Resolve them using git mergetool."
+	git_do merge --no-commit "$ORIGIN/$base" >/dev/null 2>&1  || {
+	  echo "*******************************************************************************"
+	  die "WARNING: There were merge conflicts on $base. Resolve them using git mergetool."
+	}
 	echo "Executing Git command 'git push origin $base'"
 	git_do push origin "$base" >/dev/null 2>&1 || \
 	  die "Could not push to $base from $ORIGIN."
@@ -795,13 +807,17 @@ cmd_update() {
 	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not fetch $BRANCH from $ORIGIN."
 	echo "Executing Git command 'git merge --no-commit $ORIGIN/$BRANCH'"
-	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1  || \
-	  die "There were merge conflicts on $BRANCH. Resolve them using git mergetool."
+	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1  || {
+	  echo "*********************************************************************************"
+	  die "WARNING: There were merge conflicts on $BRANCH. Resolve them using git mergetool."
+	}
 	require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	if ! git_is_branch_merged_into "$BRANCH" "$base"; then
 		echo "Executing Git command 'git merge --no-ff $base'"
-		git_do merge --no-ff "$base" >/dev/null 2>&1 || \
-		  die "There were merge conflicts on $BRANCH. Resolve them using git mergetool."
+		git_do merge --no-ff "$base" >/dev/null 2>&1 || {
+		  echo "*********************************************************************************"
+		  die "WARNING: There were merge conflicts on $BRANCH. Resolve them using git mergetool."
+		}
 		  # TODO: What do we do now?
 		echo "Executing Git command 'git push origin $BRANCH'"
 		git_do push origin "$BRANCH" >/dev/null 2>&1 || \

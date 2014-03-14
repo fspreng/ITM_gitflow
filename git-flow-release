@@ -310,8 +310,10 @@ cmd_start() {
 		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
 		echo "Executing Git command 'git merge --no-commit $ORIGIN/$DEVELOP_BRANCH'"
-		git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1  || \
-		  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+		git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1  || {
+		  echo "*****************************************************************************************"
+		  die "WARNING: There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+		}
 		echo "Executing Git command 'git push origin $DEVELOP_BRANCH'"
 		git_do push origin "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
@@ -379,8 +381,10 @@ cmd_finish() {
 	git_do remote prune origin >/dev/null 2>&1
 	require_branch "$ORIGIN/$BRANCH"
 	echo "Executing Git command 'git merge --no-commit $ORIGIN/$BRANCH'"
-	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1 || \
-	  die "There were merge conflicts on $BRANCH. Resolve them using git mergetool."
+	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1 || {
+	  echo "*********************************************************************************"
+	  die "WARNING: There were merge conflicts on $BRANCH. Resolve them using git mergetool."
+	}
 	echo "Executing Git command 'git push origin $BRANCH'"
 	git_do push origin "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not push to $BRANCH from $ORIGIN."
@@ -399,11 +403,15 @@ cmd_finish() {
 			git_do fetch -q "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not fetch $MASTER_BRANCH from $ORIGIN."
 			echo "Executing Git command 'git pull -q --no-commit $ORIGIN $MASTER_BRANCH'"
-			git_do pull -q --no-commit "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || \
-			  die "There were merge conflicts on $MASTER_BRANCH. Resolve them using git mergetool."
+			git_do pull -q --no-commit "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || {
+			  echo "****************************************************************************************"
+			  die "WARNING: There were merge conflicts on $MASTER_BRANCH. Resolve them using git mergetool."
+			}
 #			echo "Executing Git command 'git merge --no-commit $ORIGIN/$MASTER_BRANCH'"
-#			git_do merge --no-commit "$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1 || \
-#			  die "There were merge conflicts on $MASTER_BRANCH. Resolve them using git mergetool."
+#			git_do merge --no-commit "$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1 || {
+#			  echo "****************************************************************************************"
+#			  die "WARNING: There were merge conflicts on $MASTER_BRANCH. Resolve them using git mergetool."
+#			}
 #			echo "Executing Git command 'git push origin $MASTER_BRANCH'"
 #			git_do push origin "$MASTER_BRANCH" >/dev/null 2>&1 || \
 #			  die "Could not push to $MASTER_BRANCH from $ORIGIN."
@@ -485,11 +493,15 @@ cmd_finish() {
 		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
 		echo "Executing Git command 'git pull -q --no-commit $ORIGIN $DEVELOP_BRANCH'"
-		git_do pull -q --no-commit "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
-		  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+		git_do pull -q --no-commit "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || {
+		  echo "*****************************************************************************************"
+		  die "WARNING: There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+		}
 #		echo "Executing Git command 'git merge --no-commit $ORIGIN/$DEVELOP_BRANCH'"
-#		git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1 || \
-#		  die "There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+#		git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1 || {
+#		  echo "*****************************************************************************************"
+#		  die "WARNING: There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
+#		}
 		echo "Executing Git command 'git push origin $DEVELOP_BRANCH'"
 		git_do push origin "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
@@ -501,13 +513,17 @@ cmd_finish() {
 			# ideally git merge --no-ff $tagname here, instead!
 			if noflag squash; then
 				echo "Executing Git command 'git merge --no-ff $BRANCH'"
-				git_do merge --no-ff "$BRANCH" >/dev/null 2>&1 || \
-				  die "There were merge conflicts."
+				git_do merge --no-ff "$BRANCH" >/dev/null 2>&1 || {
+				  echo "************************************"
+				  die "WARNING: There were merge conflicts."
+				}
 				  # TODO: What do we do now?
 			else
 				echo "Executing Git command 'git merge --squash $BRANCH'"
-				git_do merge --squash "$BRANCH" >/dev/null 2>&1 || \
-				  die "There were merge conflicts."
+				git_do merge --squash "$BRANCH" >/dev/null 2>&1 || {
+				  echo "************************************"
+				  die "WARNING: There were merge conflicts."
+				}
 				  # TODO: What do we do now?
 				echo "Executing Git command 'git commit --quiet'"
 				git_do commit --quiet 
@@ -530,13 +546,17 @@ cmd_finish() {
 		  die "Could not check out $MASTER_BRANCH."
 		if noflag squash; then
 			echo "Executing Git command 'git merge --no-ff $BRANCH'"
-			git_do merge --no-ff "$BRANCH" >/dev/null 2>&1  || \
-				die "There were merge conflicts."
+			git_do merge --no-ff "$BRANCH" >/dev/null 2>&1  || {
+			  echo "************************************"
+			  die "WARNING: There were merge conflicts."
+			}
 				# TODO: What do we do now?
 		else
 			echo "Executing Git command 'git merge --squash $BRANCH'"
-			git_do merge --squash "$BRANCH" >/dev/null 2>&1 || \
-				die "There were merge conflicts."
+			git_do merge --squash "$BRANCH" >/dev/null 2>&1 || {
+			  echo "************************************"
+			  die "WARNING: There were merge conflicts."
+			}
 			echo "Executing Git command 'git commit --quiet'"
 			git_do commit --quiet 
 		fi
