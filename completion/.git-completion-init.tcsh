@@ -10,8 +10,8 @@ if ( -d ${HOME}/.git-completion ) then
 else
 	mkdir ${HOME}/.git-completion
 endif
-cp ${HOME}/git-completion/.git-completion.tcsh ${HOME}/.git-completion/.git-completion.tcsh
-cp ${HOME}/git-completion/.git-completion.bash ${HOME}/.git-completion/.git-completion.bash
+cp /archive/software/gitflow/completion/.git-completion.tcsh ${HOME}/.git-completion/.git-completion.tcsh
+cp /archive/software/gitflow/completion/.git-completion.bash ${HOME}/.git-completion/.git-completion.bash
 
 if ( -f "${HOME}/.git-completion/.git-completion.tcsh" ) then
 	source ${HOME}/.git-completion/.git-completion.tcsh
