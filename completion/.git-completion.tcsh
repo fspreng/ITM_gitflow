@@ -34,8 +34,8 @@ exit
 endif
 unset __git_tcsh_completion_version
 
-set __git_tcsh_completion_original_script = ${HOME}/.git-completion.bash
-set __git_tcsh_completion_script = ${HOME}/.git-completion.tcsh.bash
+set __git_tcsh_completion_original_script = ${HOME}/.git-completion/.git-completion.bash
+set __git_tcsh_completion_script = ${HOME}/.git-completion/.git-completion.tcsh.bash
 
 # Check that the user put the script in the right place
 if ( ! -e ${__git_tcsh_completion_original_script} ) then
