@@ -1,5 +1,3 @@
-#!tcsh
-#
 # tcsh completion support for core Git.
 #
 # Copyright (C) 2012 Marc Khouzam <marc.khouzam@gmail.com>
@@ -125,4 +123,4 @@ EOF
 unset __git_tcsh_completion_original_script
 
 complete git 'p,*,`bash ${__git_tcsh_completion_script} git "${COMMAND_LINE}"`,'
-complete gitk 'p,*,`bash ${__git_tcsh_completion_script} gitk "${COMMAND_LINE}"`,' 
+complete gitk 'p,*,`bash ${__git_tcsh_completion_script} gitk "${COMMAND_LINE}"`,'
