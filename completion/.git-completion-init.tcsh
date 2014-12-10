@@ -1,5 +1,16 @@
 #!tcsh
 #
+# ITM Gitflow script package -- A collection of Git extensions to provide
+# high-level repository operations for Vincent Driessen's branching model.
+#
+# A blog post by Vincent Driessen presenting this model is found at:
+#    http://nvie.com/posts/a-successful-git-branching-model/
+#
+# Feel free to contribute to this project at:
+#    https://github.com/fspreng/ITM_gitflow
+#
+# Copyright (c) 2012-2015 Fabian Spreng. All rights reserved.
+#
 # Initialize git completion script for ITM tcsh by copying the appropriate template file and, subsequently, sourcing it.
 #
 
