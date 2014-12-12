@@ -1,20 +1,15 @@
-git-flow
-========
+ITM Gitflow Script Package
+==========================
 
-A collection of Git extensions to provide high-level repository operations
-for Vincent Driessen's [branching model](http://nvie.com/git-model "original
-blog post").
+ITM Version of the Git extensions to provide high-level repository operations for Vincent Driessen's [branching model](http://nvie.com/posts/a-successful-git-branching-model/).
 
 
 Getting started
 ---------------
-For the best introduction to get started with `git flow`, please read Jeff
-Kreeftmeijer's blog post:
+You find a short summary on the basic concept of Vincent Driessen's branching model in [Steve's SourceTree blog post](https://blog.sourcetreeapp.com/2012/08/01/smart-branching-with-sourcetree-and-git-flow/).
 
-[http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/](http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/)
-
-Or have a look at one of these screen casts:
-
+Ohter fantastic sources of information are:
+* [Why aren't you using git-flow](http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/) (by Jeff Kreeftmeijer)
 * [How to use a scalable Git branching model called git-flow](http://buildamodule.com/video/change-management-and-version-control-deploying-releases-features-and-fixes-with-git-how-to-use-a-scalable-git-branching-model-called-gitflow) (by Build a Module)
 * [A short introduction to git-flow](http://vimeo.com/16018419) (by Mark Derricutt)
 * [On the path with git-flow](http://codesherpas.com/screencasts/on_the_path_gitflow.mov) (by Dave Bock)
@@ -27,122 +22,108 @@ See the Wiki for up-to-date [Installation Instructions](https://github.com/nvie/
 
 Integration with your shell
 ---------------------------
-For those who use the [Bash](http://www.gnu.org/software/bash/) or
-[ZSH](http://www.zsh.org) shell, please check out the excellent work on the
-[git-flow-completion](http://github.com/bobthecow/git-flow-completion) project
-by [bobthecow](http://github.com/bobthecow). It offers tab-completion for all
-git-flow subcommands and branch names.
+For those who use the [Bash](http://www.gnu.org/software/bash/) or [ZSH](http://www.zsh.org) shell, please check out the excellent work on the [git-flow-completion](http://github.com/bobthecow/git-flow-completion) project by [bobthecow](http://github.com/bobthecow). It offers tab-completion for all git-flow subcommands and branch names.
 
 
 FAQ
 ---
-See the [FAQ](http://github.com/nvie/gitflow/wiki/FAQ) section of the project
-Wiki.
+The version numbering scheme is the following: <Major tag>.<Minor tag>.<Hotfix tag>
+
+For more information, please see the [FAQ](http://github.com/fspreng/ITM_gitflow/wiki/FAQ) section of the project Wiki.
 
 
 Please help out
 ---------------
-This project is still under development. Feedback and suggestions are very
-welcome and I encourage you to use the [Issues
-list](http://github.com/nvie/gitflow/issues) on Github to provide that
-feedback.
+This project is under development. Questions, tips,, or general remarks are very welcome and I encourage you to use the [Issues list](http://github.com/fspreng/ITM_gitflow/issues) on GitHub to provide that feedback.
 
-Feel free to fork this repo and to commit your additions. For a list of all
-contributors, please see the [AUTHORS](AUTHORS) file.
+Feel free to fork this repository and commit your additions.
 
-Any questions, tips, or general discussion can be posted to our Google group:
-[http://groups.google.com/group/gitflow-users](http://groups.google.com/group/gitflow-users)
 
 Contributing
 ------------
 Fork the repository.  Then, run:
 
-    git clone --recursive git@github.com:<username>/gitflow.git
-    cd gitflow
-    git branch master origin/master
-    git flow init -d
-    git flow feature start <your feature>
+    git clone --recursive git@github.com:<username>/ITM_gitflow.git
+    cd ITM_gitflow
 
-Then, do work and commit your changes.  **Hint**: ``export PATH=`pwd`:$PATH``
-from within the gitflow directory makes sure you're using the version of
-gitflow you're currently developing.
+Install the git-flow software by running make.
 
-    git flow feature publish <your feature>
+    git-flow init -d
+    git-flow feature start <your feature>
 
-When done, open a pull request to your feature branch.
+When you're done, open a pull request to your feature branch.
 
 License terms
 -------------
-git-flow is published under the liberal terms of the BSD License, see the
-[LICENSE](LICENSE) file. Although the BSD License does not require you to share
-any modifications you make to the source code, you are very much encouraged and
-invited to contribute back your modifications to the community, preferably
-in a Github fork, of course.
+The ITM Gitflow script package is published under the liberal terms of the MIT License and the original git-flow software under the FreeBSD License, see the [LICENSE](LICENSE) file. Although the MIT License does not require you to share any modifications you make to the source code, you are very much encouraged and invited to contribute back your modifications to the community, preferably in a GitHub fork, of course.
 
 
 ### Initialization
 
-To initialize a new repo with the basic branch structure, use:
+To initialize a new repository with the basic branch structure, use:
   
-		git flow init [-d]
+		git-flow init [-d]
   
-This will then interactively prompt you with some questions on which branches
-you would like to use as development and production branches, and how you
-would like your prefixes be named. You may simply press Return on any of
-those questions to accept the (sane) default suggestions.
+This will then interactively prompt you with some questions on which branches you would like to use as development and production branches, and how you would like your prefixes be named. You may simply press Return on any of those questions to accept the (sane) default suggestions.
 
 The ``-d`` flag will accept all defaults.
 
 
 ### Creating feature/release/hotfix/support branches
 
-* To list/start/finish feature branches, use:
+* To list/start/update/track/finish/delete feature branches, use:
   
-  		git flow feature
-  		git flow feature start <name> [<base>]
-  		git flow feature finish <name>
+  		git-flow feature
+  		git-flow feature start <name> [<base>] (default: <base>=develop)
+  		git-flow feature update <name> [<base>] (default: <base>=develop)
+  		git-flow feature track <name>
+  		git-flow feature finish <name>
+  		git-flow feature delete <name>
   
-  For feature branches, the `<base>` arg must be a commit on `develop`.
+  For feature branches, the `<base>` arg must be a branch, default value is `develop`.
 
-* To push/pull a feature branch to the remote repository, use:
-
-  		git flow feature publish <name>
-		  git flow feature pull <remote> <name>
-
-* To list/start/finish release branches, use:
+* To list/start/track/finish/delete hotfix branches, use:
   
-  		git flow release
-  		git flow release start <release> [<base>]
-  		git flow release finish <release>
-  
-  For release branches, the `<base>` arg must be a commit on `develop`.
-  
-* To list/start/finish hotfix branches, use:
-  
-  		git flow hotfix
-  		git flow hotfix start <release> [<base>]
-  		git flow hotfix finish <release>
-  
-  For hotfix branches, the `<base>` arg must be a commit on `master`.
+  		git-flow hotfix
+  		git-flow hotfix start <version>
+  		git-flow hotfix track <name>
+  		git-flow hotfix finish <name>
+  		git-flow hotfix delete <name>
 
-* To list/start support branches, use:
+* To list/start/track/finish/delete release branches, use:
   
-  		git flow support
-  		git flow support start <release> <base>
+  		git-flow release
+  		git-flow release start major
+  		git-flow release start minor
+  		git-flow release track <name>
+  		git-flow release finish <name>
+  		git-flow release delete <name>
+
+* To list/start/delete support branches, use:
   
-  For support branches, the `<base>` arg must be a commit on `master`.
+  		git-flow support
+  		git-flow support start <name> <base>
+  		git-flow support delete <name>
+  
+  For support branches, the `<base>` arg must be a branch`.
 
 
-Showing your appreciation
-=========================
-A few people already requested it, so now it's here: a Flattr button.
+### Enjoying the additional subcommands of the ITM Gitflow script package
 
-Of course, the best way to show your appreciation for the original
-[blog post](http://nvie.com/posts/a-successful-git-branching-model/) or the git-flow tool itself remains
-contributing to the community.  If you'd like to show your appreciation in
-another way, however, consider Flattr'ing me:
+* clone subcommand:
 
-[![Flattr this][2]][1]
+  		git-flow clone <reference repository> <destination directory>
 
-[1]: http://flattr.com/thing/53771/git-flow
-[2]: http://api.flattr.com/button/button-static-50x60.png
+  Clones the specified reference repository into the provided destination directory, e.g. `<destination directory>=.`, initializes the ITM Gitflow script package for the cloned repository, and modifies the access permissions of the target directory in such a way that only the owner of the repository is allowed to read, write, and execute all content.
+
+* commit subcommand:
+
+  		git-flow commit [flags <arguments>]
+
+  Basically, the `commit` subcommand is a wrapper script combining a commit to the local repository with one to the tracked remote repository. For this, the standard `git commit` command is employed and, therefore, `git-flow commit` accepts the same flags and arguments as the `git commit` command does.
+
+* reset subcommand:
+
+  		git-flow reset [flags <arguments>]
+
+  Basically, the `reset` subcommand is a wrapper script combining a reset of the local repository with one of the tracked remote repository. For this, the standard `git reset` command is employed and, therefore, `git-flow reset` accepts the same flags and arguments as the `git reset` command does.
