@@ -1,4 +1,4 @@
-ITM Gitflow Script Package
+ITM Gitflow script package
 ==========================
 
 ITM Version of the Git extensions to provide high-level repository operations for Vincent Driessen's [branching model](http://nvie.com/posts/a-successful-git-branching-model/).
@@ -15,9 +15,9 @@ Ohter fantastic sources of information are:
 * [On the path with git-flow](http://codesherpas.com/screencasts/on_the_path_gitflow.mov) (by Dave Bock)
 
 
-Installing git-flow
+Installing ITM Gitflow
 -------------------
-See the Wiki for up-to-date [Installation Instructions](https://github.com/nvie/gitflow/wiki/Installation).
+See the Wiki for up-to-date [installation instructions](https://github.com/nvie/gitflow/wiki/Installation).
 
 
 Integration with your shell
@@ -27,14 +27,14 @@ For those who use the [Bash](http://www.gnu.org/software/bash/) or [ZSH](http://
 
 FAQ
 ---
-The version numbering scheme is the following: <Major tag>.<Minor tag>.<Hotfix tag>
+The version numbering scheme is the following: `<Major tag>.<Minor tag>.<Hotfix tag>`
 
 For more information, please see the [FAQ](http://github.com/fspreng/ITM_gitflow/wiki/FAQ) section of the project Wiki.
 
 
 Please help out
 ---------------
-This project is under development. Questions, tips,, or general remarks are very welcome and I encourage you to use the [Issues list](http://github.com/fspreng/ITM_gitflow/issues) on GitHub to provide that feedback.
+This project is under development. Questions, tips, and general remarks are very welcome and I encourage you to use the [Issues list](http://github.com/fspreng/ITM_gitflow/issues) on GitHub to provide that feedback.
 
 Feel free to fork this repository and commit your additions.
 
@@ -46,7 +46,7 @@ Fork the repository.  Then, run:
     git clone --recursive git@github.com:<username>/ITM_gitflow.git
     cd ITM_gitflow
 
-Install the git-flow software by running make.
+Install the ITM Gitflow software by running make.
 
     git-flow init -d
     git-flow feature start <your feature>
@@ -55,14 +55,14 @@ When you're done, open a pull request to your feature branch.
 
 License terms
 -------------
-The ITM Gitflow script package is published under the liberal terms of the MIT License and the original git-flow software under the FreeBSD License, see the [LICENSE](LICENSE) file. Although the MIT License does not require you to share any modifications you make to the source code, you are very much encouraged and invited to contribute back your modifications to the community, preferably in a GitHub fork, of course.
+The ITM Gitflow script package is published under the liberal terms of the MIT License and the original git-flow software is released under the FreeBSD License, see the [LICENSE](LICENSE) file. Although the MIT License does not require you to share any modifications you make to the source code, you are very much encouraged and invited to contribute back your modifications to the community, preferably in a GitHub fork, of course.
 
 
 ### Initialization
 
 To initialize a new repository with the basic branch structure, use:
   
-		git-flow init [-d]
+	git-flow init [-d]
   
 This will then interactively prompt you with some questions on which branches you would like to use as development and production branches, and how you would like your prefixes be named. You may simply press Return on any of those questions to accept the (sane) default suggestions.
 
@@ -80,7 +80,7 @@ The ``-d`` flag will accept all defaults.
   		git-flow feature finish <name>
   		git-flow feature delete <name>
   
-  For feature branches, the `<base>` arg must be a branch, default value is `develop`.
+  For feature branches, the `<base>` argument must be a branch, default value is `develop`.
 
 * To list/start/track/finish/delete hotfix branches, use:
   
@@ -93,8 +93,7 @@ The ``-d`` flag will accept all defaults.
 * To list/start/track/finish/delete release branches, use:
   
   		git-flow release
-  		git-flow release start major
-  		git-flow release start minor
+  		git-flow release start major or git-flow release start minor
   		git-flow release track <name>
   		git-flow release finish <name>
   		git-flow release delete <name>
@@ -105,10 +104,10 @@ The ``-d`` flag will accept all defaults.
   		git-flow support start <name> <base>
   		git-flow support delete <name>
   
-  For support branches, the `<base>` arg must be a branch`.
+  For support branches, the `<base>` arg must be a branch.
 
 
-### Enjoying the additional subcommands of the ITM Gitflow script package
+### Enjoying the additional subcommands of ITM Gitflow
 
 * clone subcommand:
 
