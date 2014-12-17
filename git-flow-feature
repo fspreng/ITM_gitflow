@@ -716,7 +716,7 @@ avoid_accidental_cross_branch_action() {
 	local current_branch=$(git_current_branch)
 	if [ "$BRANCH" != "$current_branch" ]; then
 		warn "Trying to pull from '$BRANCH' while currently on branch '$current_branch'."
-		warn "To avoid unintended merges, git-flow aborted."
+		warn "To avoid unintended merges, ITM Gitflow aborted."
 		return 1
 	fi
 	return 0

@@ -46,7 +46,7 @@ cmd_default() {
 	fi
 	echo "Executing command 'chmod -R o-rwx $DESTINATION'"
 	chmod -R o-rwx $DESTINATION
-	# initialize git-flow for cloned repository
+	# initialize ITM Gitflow for cloned repository
 	cd "$DESTINATION/.git"
 	echo '[gitflow "branch"]' >> config
 	echo '	master = deploy' >> config
@@ -57,7 +57,7 @@ cmd_default() {
 	echo '	hotfix = hotfix/' >> config
 	echo '	support = support/' >> config
 	echo '	versiontag = v' >> config
-	echo '	command = gf' >> config
+	echo '	command = git-flow' >> config
 	# create the local master branch following the remote master
 	gitflow_load_settings
 	echo "Executing Git command 'git branch --track $MASTER_BRANCH $ORIGIN/$MASTER_BRANCH'"

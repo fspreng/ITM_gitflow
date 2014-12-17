@@ -63,7 +63,7 @@ cmd_default() {
 		git_repo_is_headless || require_clean_working_tree
 	fi
 
-	# running git-flow init on an already initialized repo is fine
+	# running ITM Gitflow init on an already initialized repo is fine
 	if gitflow_is_initialized && ! flag force; then
 		warn "Already initialized for gitflow."
 		warn "To force reinitialization, use: git-flow init -f"
@@ -87,7 +87,7 @@ cmd_default() {
 		#    We will create a new master/develop branch for the user
 		# 2. Some branches do already exist
 		#    We will disallow creation of new master/develop branches and
-		#    rather allow to use existing branches for git-flow.
+		#    rather allow to use existing branches for ITM Gitflow.
 		local default_suggestion
 		local should_check_existence
 		branch_count=$(git_local_branches | wc -l)
@@ -329,7 +329,7 @@ cmd_default() {
 
 	# Gitflow shell command
 	if ! git config --get gitflow.prefix.command >/dev/null 2>&1 || flag force; then
-		default_suggestion=$(git config --get gitflow.prefix.command || echo "gf")
+		default_suggestion=$(git config --get gitflow.prefix.command || echo "git-flow")
 		printf "Gitflow shell command? [$default_suggestion] "
 		if noflag defaults; then
 			read answer
@@ -339,6 +339,7 @@ cmd_default() {
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
 		echo "Executing Git command 'git config gitflow.prefix.command $prefix'"
 		git_do config gitflow.prefix.command "$prefix"
+		mv git-flow "$prefix"
 	fi
 
 

@@ -258,7 +258,7 @@ gitflow_resolve_nameprefix() {
 }
 
 #
-# Assertions for use in git-flow subcommands
+# Assertions for use in ITM Gitflow subcommands
 #
 
 require_git_repo() {

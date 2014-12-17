@@ -39,10 +39,10 @@
 # policies, either expressed or implied, of Vincent Driessen.
 #
 
-GITFLOW_VERSION=0.4.2-pre
+GITFLOW_VERSION=1.0.0-pre
 
 usage() {
-	echo "usage: git-flow version"
+	echo "usage: ITM Gitflow version"
 }
 
 cmd_default() {

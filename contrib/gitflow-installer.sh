@@ -50,17 +50,18 @@ EXEC_FILES="git-flow"
 SCRIPT_FILES="git-flow-init git-flow-feature git-flow-hotfix git-flow-release git-flow-support git-flow-version gitflow-common gitflow-shFlags git-flow-clone git-flow-commit git-flow-reset"
 SUBMODULE_FILE="gitflow-shFlags"
 
-echo "### git-flow no-make installer ###"
+echo "### ITM Gitflow no-make installer ###"
 
 case "$1" in
 	uninstall)
-		echo "Uninstalling git-flow from $PREFIX"
+		echo "Uninstalling ITM Gitflow from $PREFIX"
 		if [ -d "$BINDIR" ] ; then
 			for script_file in $SCRIPT_FILES $EXEC_FILES ; do
 				echo "rm -vf $BINDIR/$script_file"
 				rm -vf "$BINDIR/$script_file"
 			done
 			rm -rf "$DOCDIR"
+			echo "If you chose another base command than 'git-flow' during initialization, you have to remove the executable file manually. Sorry for that!"
 		else
 			echo "The '$BINDIR' directory was not found."
 		fi
@@ -71,7 +72,7 @@ case "$1" in
 		exit
 		;;
 	install)
-		echo "Installing git-flow to $INSTALL_PREFIX"
+		echo "Installing ITM Gitflow to $INSTALL_PREFIX"
 		if [ -d "$REPO_NAME" -a -d "$REPO_NAME/.git" ] ; then
 			echo "Using existing repo: $REPO_NAME"
 		else

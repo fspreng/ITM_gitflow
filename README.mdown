@@ -109,19 +109,19 @@ The ``-d`` flag will accept all defaults.
 
 ### Enjoying the additional subcommands of ITM Gitflow
 
-* clone subcommand:
+* clone subcommand (clone + init + chmod):
 
   		git-flow clone <reference repository> <destination directory>
 
   Clones the specified reference repository into the provided destination directory, e.g. `<destination directory>=.`, initializes the ITM Gitflow script package for the cloned repository, and modifies the access permissions of the target directory in such a way that only the owner of the repository is allowed to read, write, and execute all content.
 
-* commit subcommand:
+* commit subcommand (commit + push):
 
   		git-flow commit [flags <arguments>]
 
   Basically, the `commit` subcommand is a wrapper script combining a commit to the local repository with one to the tracked remote repository. For this, the standard `git commit` command is employed and, therefore, `git-flow commit` accepts the same flags and arguments as the `git commit` command does.
 
-* reset subcommand:
+* reset subcommand (reset + push):
 
   		git-flow reset [flags <arguments>]
 
