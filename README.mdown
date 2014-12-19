@@ -8,21 +8,53 @@ Getting started
 ---------------
 You find a short summary on the basic concept of Vincent Driessen's branching model in [Steve's SourceTree blog post](https://blog.sourcetreeapp.com/2012/08/01/smart-branching-with-sourcetree-and-git-flow/).
 
-Ohter fantastic sources of information are:
+Other fantastic sources of information are:
 * [Why aren't you using git-flow](http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/) (by Jeff Kreeftmeijer)
 * [How to use a scalable Git branching model called git-flow](http://buildamodule.com/video/change-management-and-version-control-deploying-releases-features-and-fixes-with-git-how-to-use-a-scalable-git-branching-model-called-gitflow) (by Build a Module)
 * [A short introduction to git-flow](http://vimeo.com/16018419) (by Mark Derricutt)
 * [On the path with git-flow](http://codesherpas.com/screencasts/on_the_path_gitflow.mov) (by Dave Bock)
 
 
-Installing ITM Gitflow
--------------------
+Highlights of ITM Gitflow
+-------------------------
+* Additional subcommands `git-flow clone`, `git-flow commit`, and `git-flow release` for better user-friendliness.
+
+* Less effort for user due to a fully automated creation of version numbers for upcoming releases and hotfixes.
+
+* Thorough overhaul of original git-flow subcommands:
+  - Improved strategy for synchronization of local repository with remote one to ensure data consistency and avoid redundancy.
+
+  - Additional action `git-flow feature update <name> [<base>]` to reduce required user interaction.
+
+  - Additional action `git-flow <branch specifier> delete [-l]` to further reduce necessity to use standard Git commands along with the ITM Gitflow script.
+
+  - Removed superfluous restrictions of original subcommands to be able to deal with a higher number of scenarios possibly occurring during development.
+
+  - Additional flags for all subcommands to make them easier to use and more flexible.
+
+  - Possibility to merge a hotfix branch also into an existing release branch when finishing it in order to reduce the number of necessary workarounds.
+
+  - Further developed the concept of support branches to allow for special solutions where necessary.
+
+* Additional sanity checks to improve script stability and safety in terms of data loss and branch conflicts.
+
+* A more detailed and concise user feedback to speed up the development process.
+
+* Improved source code documentation.
+
+For more detailed information on all available ITM Gitflow subcommands/branch specifiers, branch actions, and accepted flags and arguments, see the [cheat sheet](https://github.com/fspreng/ITM_gitflow/blob/develop/gitflow_cheat_sheet.pdf). It also provides you with some facts about the underlying Git branching model by Vincent Driessen and the particularities of ITM Gitflow, as well as some suggestions on how to get started with the script and on the actual workflow.
+
+A complete list of modification can be found in the [changelog](https://github.com/fspreng/ITM_gitflow/blob/develop/Changes.mdown) of the ITM Gitflow script package.
+
+
+Installation
+------------
 See the Wiki for up-to-date [installation instructions](https://github.com/nvie/gitflow/wiki/Installation).
 
 
 Integration with your shell
 ---------------------------
-For those who use the [Bash](http://www.gnu.org/software/bash/) or [ZSH](http://www.zsh.org) shell, please check out the excellent work on the [git-flow-completion](http://github.com/bobthecow/git-flow-completion) project by [bobthecow](http://github.com/bobthecow). It offers tab-completion for all git-flow subcommands and branch names.
+For those who use the [bash](http://www.gnu.org/software/bash/) or [zsh](http://www.zsh.org) shell, please check out the excellent work on the [git-flow-completion](http://github.com/bobthecow/git-flow-completion) project by [bobthecow](http://github.com/bobthecow). It offers tab-completion for all git-flow subcommands and branch names.
 
 
 FAQ
@@ -53,11 +85,9 @@ Install the ITM Gitflow software by running make.
 
 When you're done, open a pull request to your feature branch.
 
-License terms
--------------
-The ITM Gitflow script package is published under the liberal terms of the MIT License and the original git-flow software is released under the FreeBSD License, see the [LICENSE](LICENSE) file. Although the MIT License does not require you to share any modifications you make to the source code, you are very much encouraged and invited to contribute back your modifications to the community, preferably in a GitHub fork, of course.
 
-
+Usage
+-----
 ### Initialization
 
 To initialize a new repository with the basic branch structure, use:
@@ -104,7 +134,7 @@ The ``-d`` flag will accept all defaults.
   		git-flow support start <name> <base>
   		git-flow support delete <name>
   
-  For support branches, the `<base>` arg must be a branch.
+  For support branches, the `<base>` argument must be a branch.
 
 
 ### Enjoying the additional subcommands of ITM Gitflow
@@ -126,3 +156,8 @@ The ``-d`` flag will accept all defaults.
   		git-flow reset [flags <arguments>]
 
   Basically, the `reset` subcommand is a wrapper script combining a reset of the local repository with one of the tracked remote repository. For this, the standard `git reset` command is employed and, therefore, `git-flow reset` accepts the same flags and arguments as the `git reset` command does.
+
+
+License terms
+-------------
+The ITM Gitflow script package is published under the liberal terms of the MIT License and the original git-flow software is released under the FreeBSD License, see the [LICENSE](LICENSE) file. Although the MIT License does not require you to share any modifications you make to the source code, you are very much encouraged and invited to contribute back your modifications to the community, preferably in a GitHub fork, of course.

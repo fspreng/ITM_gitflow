@@ -2,7 +2,7 @@
 -----
 Release date: **not yet**
 
-* Created a [cheat sheet][1] for the ITM Gitflow script package and added it to
+* Created a [cheat sheet][4] for the ITM Gitflow script package and added it to
   the corresponding Git repository. It provides detailed information on all
   available subcommands/branch specifiers, branch actions, and accepted flags
   and arguments. In addition, some background information on the underlying Git
@@ -93,7 +93,7 @@ Release date: **not yet**
     - Removed restriction that a support branch must be based on the master
       branch.
 
-* Added little [Pasimodo][2]-specific code.
+* Added little [Pasimodo][5]-specific code.
 
 * Improved user feedback that is provided by the ITM Gitflow script, e.g., show
   extended help messages in case that an error has been caught and reveal
@@ -104,7 +104,7 @@ Release date: **not yet**
   arguments is checked before executing a command, and exceptions and errors
   that have not been treated in a proper way so far are now caught.
 
-* The ITM Gitflow script package now comes with the [git-completion][3]
+* The ITM Gitflow script package now comes with the [git-completion][6]
   extension for bash/zsh and tcsh (thanks to Shawn O. Pearce and Marc Khouzam).
 
 * Improved source code documentation.
@@ -113,9 +113,9 @@ Release date: **not yet**
 
 * Added MIT license.
 
-[1]: https://github.com/fspreng/ITM_gitflow/blob/develop/gitflow_cheat_sheet.pdf
-[2]: http://www.itm.uni-stuttgart.de/research/pasimodo/pasimodo_en.php
-[3]: https://github.com/git/git/tree/master/contrib/completion
+[4]: https://github.com/fspreng/ITM_gitflow/blob/develop/gitflow_cheat_sheet.pdf
+[5]: http://www.itm.uni-stuttgart.de/research/pasimodo/pasimodo_en.php
+[6]: https://github.com/git/git/tree/master/contrib/completion
 
 0.4.1_last:
 -----
