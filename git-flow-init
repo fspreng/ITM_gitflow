@@ -94,7 +94,7 @@ cmd_default() {
 		if [ "$branch_count" -eq 0 ]; then
 			echo "No branches exist yet. Base branches must be created now."
 			should_check_existence=NO
-			default_suggestion=$(git config --get gitflow.branch.master || echo master)
+			default_suggestion=$(git config --get gitflow.branch.master || echo deploy)
 		else
 			echo
 			echo "Which branch should be used for bringing forth production releases?"
@@ -103,7 +103,7 @@ cmd_default() {
 			should_check_existence=YES
 			default_suggestion=
 			for guess in $(git config --get gitflow.branch.master) \
-			             'production' 'main' 'master'; do
+			             'production' 'main' 'master' 'deploy'; do
 				if git_local_branch_exists "$guess"; then
 					default_suggestion="$guess"
 					break
