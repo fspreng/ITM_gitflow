@@ -1,0 +1,51 @@
+#
+# ITM Gitflow script package -- A collection of Git extensions to provide
+# high-level repository operations for Vincent Driessen's branching model.
+#
+# A blog post by Vincent Driessen presenting this model is found at:
+#    http://nvie.com/posts/a-successful-git-branching-model/
+#
+# Feel free to contribute to this project at:
+#    https://github.com/fspreng/ITM_gitflow
+#
+# Copyright (c) 2012-2015 Fabian Spreng. All rights reserved.
+#
+
+init() {
+  require_git_repo
+  require_gitflow_initialized
+  gitflow_load_settings
+  BRANCH=$(git_do branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g')
+}
+
+usage() {
+#	echo "usage: $GITFLOW_COMMAND reset <commit_message>"
+	echo "usage: $GITFLOW_COMMAND reset <arguments>"
+	echo "       see the git reset man page for further information"
+}
+
+cmd_default() {
+	# record changes to the local and the remote repository
+	echo "Executing Git command 'git reset $@'"
+	git_do reset "$@" >/dev/null 2>&1 || \
+	  die "Could not reset HEAD of local repository $BRANCH."
+	echo "Executing Git command 'git fetch -q $ORIGIN $BRANCH'"
+	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
+#	echo "Executing Git command 'git remote prune origin'"
+#	  git_do remote prune origin >/dev/null 2>&1 && die "Could not fetch $BRANCH from $ORIGIN."
+	  die "Could not fetch $BRANCH from $ORIGIN. ('git remote prune origin' could be useful)"
+	echo "Executing Git command 'git push origin $BRANCH'"
+	git_do push origin "$BRANCH" >/dev/null 2>&1 || \
+	  die "Could not push to $BRANCH from $ORIGIN."
+
+	echo
+	echo "Summary of actions:"
+#	echo "- Latest objects have been fetched from '$ORIGIN'"
+	echo "- HEAD of the local and the remote branch '$BRANCH' has been reset"
+	echo  
+}
+
+cmd_help() {
+	usage
+	exit 0
+}

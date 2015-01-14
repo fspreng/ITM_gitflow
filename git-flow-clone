@@ -1,0 +1,91 @@
+#
+# ITM Gitflow script package -- A collection of Git extensions to provide
+# high-level repository operations for Vincent Driessen's branching model.
+#
+# A blog post by Vincent Driessen presenting this model is found at:
+#    http://nvie.com/posts/a-successful-git-branching-model/
+#
+# Feel free to contribute to this project at:
+#    https://github.com/fspreng/ITM_gitflow
+#
+# Copyright (c) 2012-2015 Fabian Spreng. All rights reserved.
+#
+
+usage() {
+	echo "usage: $(git config --get gitflow.prefix.command) clone <path to reference repository> <path to destination folder>"
+	echo "       see the git clone man page for further information"
+}
+
+require_source_arg() {
+	if [ "$SOURCE" = "" ]; then
+		warn "Missing argument <path to reference repository>"
+		usage
+		exit 1
+	fi
+}
+
+require_destination_arg() {
+	if [ "$DESTINATION" = "" ]; then
+		warn "Missing argument <path to destination folder>"
+		usage
+		exit 1
+	fi
+}
+
+cmd_default() {
+	parse_args "$@"
+	require_source_arg
+	require_destination_arg
+	# clone new repository using standard git clone command
+	echo "Executing Git command 'git clone -b develop $SOURCE $DESTINATION'"
+	git_do clone -b develop $SOURCE $DESTINATION || \
+	  die "Could not clone git repository '$SOURCE' into '$DESTINATION'."
+	# modify acccess permissions of cloned repository
+	if [ "$DESTINATION" = "." ]; then
+		DESTINATION=$PWD
+	fi
+	echo "Executing command 'chmod -R o-rwx $DESTINATION'"
+	chmod -R o-rwx $DESTINATION
+	# initialize ITM Gitflow for cloned repository
+	cd "$DESTINATION/.git"
+	echo '[gitflow "branch"]' >> config
+	echo '	master = deploy' >> config
+	echo '	develop = develop' >> config
+	echo '[gitflow "prefix"]' >> config
+	echo '	feature = feature/' >> config
+	echo '	release = release/' >> config
+	echo '	hotfix = hotfix/' >> config
+	echo '	support = support/' >> config
+	echo '	versiontag = v' >> config
+	echo '	command = git-flow' >> config
+	# create the local master branch following the remote master
+	gitflow_load_settings
+	echo "Executing Git command 'git branch --track $MASTER_BRANCH $ORIGIN/$MASTER_BRANCH'"
+	git_do branch --track $MASTER_BRANCH $ORIGIN/$MASTER_BRANCH >/dev/null 2>&1 || \
+	  die "Could not create a local branch '$MASTER_BRANCH', based on the remote branch '$MASTER_BRANCH' from '$ORIGIN'."
+
+	echo
+	echo "Summary of actions:"
+	echo "- A new git repository '$DESTINATION' was created, based on '$SOURCE'"
+	echo "- Access to the git repository '$DESTINATION' has been restricted for group 'others'"
+	echo "- Local branches '$MASTER_BRANCH' and '$DEVELOP_BRANCH' have been created following the corresponding branches from '$ORIGIN'"
+	echo "- Gitflow has been initialized for the cloned repository"
+	echo
+	echo "Now, you can start working. Have fun!"
+	echo
+}
+
+cmd_help() {
+	usage
+	exit 0
+}
+
+parse_args() {
+	# parse options
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+
+	# read arguments into global variables
+	SOURCE=$1
+	DESTINATION=$2
+}

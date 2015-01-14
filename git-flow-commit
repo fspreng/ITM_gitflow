@@ -1,0 +1,83 @@
+#
+# ITM Gitflow script package -- A collection of Git extensions to provide
+# high-level repository operations for Vincent Driessen's branching model.
+#
+# A blog post by Vincent Driessen presenting this model is found at:
+#    http://nvie.com/posts/a-successful-git-branching-model/
+#
+# Feel free to contribute to this project at:
+#    https://github.com/fspreng/ITM_gitflow
+#
+# Copyright (c) 2012-2015 Fabian Spreng. All rights reserved.
+#
+
+init() {
+  require_git_repo
+  require_gitflow_initialized
+  gitflow_load_settings
+  BRANCH=$(git_do branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g')
+}
+
+usage() {
+#	echo "usage: $GITFLOW_COMMAND commit <commit_message>"
+	echo "usage: $GITFLOW_COMMAND commit <arguments>"
+	echo "       see the git commit man page for further information"
+}
+
+require_message_arg() {
+	if [ "$MESSAGE" = "" ]; then
+		warn "Missing argument <commit_message>"
+		usage
+		exit 1
+	fi
+}
+
+cmd_default() {
+#	parse_args "$@"
+#	require_message_arg
+	if ! git_is_clean_working_tree; then
+		# record changes to the local and the remote repository
+#		echo "Executing Git command 'git commit -a --quiet -m \"$MESSAGE\"'"
+#		git_do commit -a --quiet -m "$MESSAGE" || \
+		echo "Executing Git command 'git commit $@ --quiet'"
+		git_do commit "$@" --quiet || \
+		  die "Could not commit changes to local branch $BRANCH."
+		echo "Executing Git command 'git fetch -q $ORIGIN $BRANCH'"
+		git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
+#		echo "Executing Git command 'git remote prune origin'"
+#		  (git_do remote prune origin >/dev/null 2>&1 && die "Could not fetch $BRANCH from $ORIGIN.")
+		  die "Could not fetch $BRANCH from $ORIGIN. ('git remote prune origin' could be useful)"
+		echo "Executing Git command 'git merge --no-commit $ORIGIN/$BRANCH'"
+		git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1  || {
+		  echo "**********************************************************************"
+		  die "WARNING: There were merge conflicts. Resolve them using git mergetool."
+		}
+		echo "Executing Git command 'git push origin $BRANCH'"
+		git_do push origin "$BRANCH" >/dev/null 2>&1 || \
+		  die "Could not push to $BRANCH from $ORIGIN."
+
+		echo
+		echo "Summary of actions:"
+		echo "- Latest objects have been fetched from '$ORIGIN'"
+		echo "- Changes have been committed to the local and the remote branch '$BRANCH'"
+		echo  
+	else
+		echo
+		echo "There are no changes to be committed."
+		echo
+	fi
+}
+
+cmd_help() {
+	usage
+	exit 0
+}
+
+parse_args() {
+	# parse options
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+
+	# read arguments into global variables
+	MESSAGE=$1
+}

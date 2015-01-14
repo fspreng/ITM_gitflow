@@ -1,24 +1,46 @@
-Authors are (ordered by first commit date):
+#
+# ITM Gitflow script package -- A collection of Git extensions to provide
+# high-level repository operations for Vincent Driessen's branching model.
+#
+# A blog post by Vincent Driessen presenting this model is found at:
+#    http://nvie.com/posts/a-successful-git-branching-model/
+#
+# Feel free to contribute to this project at:
+#    https://github.com/fspreng/ITM_gitflow
+#
+# Copyright (c) 2012-2015 Fabian Spreng. All rights reserved.
+#
+# Original author:
+# Copyright 2010 Vincent Driessen. All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+#    1. Redistributions of source code must retain the above copyright notice,
+#       this list of conditions and the following disclaimer.
+# 
+#    2. Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED BY VINCENT DRIESSEN ``AS IS'' AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL VINCENT DRIESSEN OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# The views and conclusions contained in the software and documentation are
+# those of the authors and should not be interpreted as representing official
+# policies, either expressed or implied, of Vincent Driessen.
+#
 
-- Vincent Driessen
-- Benedikt Böhm
-- Daniel Truemper
-- Jason L. Shiffer
-- Randy Merrill
-- Rick Osborne
-- Mark Derricutt
-- Nowell Strite
-- Felipe Talavera
-- Guillaume-Jean Herbiet
-- Joseph A. Levin
-- Jannis Leidel
-- Konstantin Tjuterev
-- Kiall Mac Innes
-- Jon Bernard
-- Olivier Mengué
-- Emre Berge Ergenekon
-- Eric Holmes
-- Vedang Manerikar
-- Myke Hines
+This piece of software is a result of the voluntary contributions made by many
+individuals. For a detailed contribution history, see the revision history and the
+logs available at https://github.com/fspreng/ITM_gitflow.
 
-Portions derived from other open source works are clearly marked.
+Portions of this project derived from other open source works are clearly marked.

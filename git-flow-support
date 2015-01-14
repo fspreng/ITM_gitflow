@@ -1,13 +1,16 @@
 #
-# git-flow -- A collection of Git extensions to provide high-level
-# repository operations for Vincent Driessen's branching model.
+# ITM Gitflow script package -- A collection of Git extensions to provide
+# high-level repository operations for Vincent Driessen's branching model.
 #
-# Original blog post presenting this model is found at:
-#    http://nvie.com/git-model
+# A blog post by Vincent Driessen presenting this model is found at:
+#    http://nvie.com/posts/a-successful-git-branching-model/
 #
 # Feel free to contribute to this project at:
-#    http://github.com/nvie/gitflow
+#    https://github.com/fspreng/ITM_gitflow
 #
+# Copyright (c) 2012-2015 Fabian Spreng. All rights reserved.
+#
+# Original author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -40,16 +43,17 @@ init() {
   require_git_repo
   require_gitflow_initialized
   gitflow_load_settings
-  VERSION_PREFIX=$(eval "echo `git config --get gitflow.prefix.versiontag`")
   PREFIX=$(git config --get gitflow.prefix.support)
+  REMOTE_PREFIX=$ORIGIN/$PREFIX
 }
 
-warn "note: The support subcommand is still very EXPERIMENTAL!"
-warn "note: DO NOT use it in a production situation."
+#warn "note: The support subcommand is still very EXPERIMENTAL!"
+#warn "note: DO NOT use it in a production situation."
 
 usage() {
-	echo "usage: git flow support [list] [-v]"
-	echo "       git flow support start [-F] <version> <base>"
+	echo "usage: $GITFLOW_COMMAND support [list] [-v]"
+	echo "       $GITFLOW_COMMAND support start [-F] <name> <base>"
+	echo "       $GITFLOW_COMMAND support delete [-l] <name>"
 }
 
 cmd_default() {
@@ -64,12 +68,19 @@ cmd_list() {
 	local current_branch
 	local short_names
 	support_branches=$(echo "$(git_local_branches)" | grep "^$PREFIX")
-	if [ -z "$support_branches" ]; then
+	echo "Executing Git command 'git remote update'"
+	git_do remote update >/dev/null 2>&1 || \
+	  die "Could not update remote branches from $ORIGIN."
+	echo "Executing Git command 'git remote prune origin'"
+	git_do remote prune origin >/dev/null 2>&1
+	local remote_support_branches
+	remote_support_branches=$(echo "$(git_remote_branches)" | grep "^$REMOTE_PREFIX")
+	if [ -z "$support_branches" ] && [ -z "$remote_support_branches" ]; then
 		warn "No support branches exist."
                 warn ""
                 warn "You can start a new support branch:"
                 warn ""
-                warn "    git flow support start <name> <base>"
+                warn "    $GITFLOW_COMMAND support start <name> <base>"
                 warn ""
 		exit 0
 	fi
@@ -83,38 +94,55 @@ cmd_list() {
 		local len=${#branch}
 		width=$(max $width $len)
 	done
+	for branch in $remote_support_branches; do
+		local len=${#branch}
+		width=$(max $width $len)
+	done
 	width=$(($width+3))
 
-	local branch
-	for branch in $short_names; do
-		local fullname=$PREFIX$branch
-		local base=$(git merge-base "$fullname" "$MASTER_BRANCH")
-		local master_sha=$(git rev-parse "$MASTER_BRANCH")
-		local branch_sha=$(git rev-parse "$fullname")
-		if [ "$fullname" = "$current_branch" ]; then
-			printf "* "
-		else
-			printf "  "
-		fi
-		if flag verbose; then
-			printf "%-${width}s" "$branch"
-			if [ "$branch_sha" = "$master_sha" ]; then
-				printf "(no commits yet)"
-			else
-				local tagname=$(git name-rev --tags --no-undefined --name-only "$base")
-				local nicename
-				if [ "$tagname" != "" ]; then
-					nicename=$tagname
-				else
-					nicename=$(git rev-parse --short "$base")
-				fi
-				printf "(based on $nicename)"
-			fi
-		else
-			printf "%s" "$branch"
-		fi
+	if [ "$support_branches" ]; then
+		printf "Local support branches:"
 		echo
-	done
+		local branch
+		for branch in $short_names; do
+			local fullname=$PREFIX$branch
+			local base=$(git merge-base "$fullname" "$DEVELOP_BRANCH")
+			local develop_sha=$(git rev-parse "$DEVELOP_BRANCH")
+			local branch_sha=$(git rev-parse "$fullname")
+			if [ "$fullname" = "$current_branch" ]; then
+				printf "* "
+			else
+				printf "  "
+			fi
+			if flag verbose; then
+				printf "%-${width}s" "$branch"
+				if [ "$branch_sha" = "$develop_sha" ]; then
+					printf "(no commits yet)"
+				else
+					local tagname=$(git name-rev --tags --no-undefined --name-only "$base")
+					local nicename
+					if [ "$tagname" != "" ]; then
+						nicename=$tagname
+					else
+						nicename=$(git rev-parse --short "$base")
+					fi
+					printf "(based on $nicename)"
+				fi
+			else
+				printf "%s" "$PREFIX$branch"
+			fi
+			echo
+		done
+	fi
+	if [ "$remote_support_branches" ]; then
+		printf "Remote support branches:"
+		echo
+		for branch in $remote_support_branches; do
+			printf "  "
+			printf "%s" "remotes/$branch"
+			echo
+		done
+	fi
 }
 
 cmd_help() {
@@ -127,6 +155,35 @@ parse_args() {
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
 
+	# process possible trailing arguments
+	length_old=0
+	for k in "${@:2}"
+	do
+		length_old=$[$length_old+1]
+	done
+	if [ "$length_old" -gt "0" ]; then
+		FLAGS "${@:2}" || exit $?
+		length_new=0
+		for l in ${FLAGS_ARGV[@]}
+		do
+			length_new=$[$length_new+1]
+		done
+		if [ "$length_new" -gt "0" ] && [ "$length_new" != "$length_old" ]; then
+			die "Putting flags between the two main arguments is not a good idea! Process aborted."
+		fi
+		if [ "$length_new" == "$length_old" ]; then
+			FLAGS "${@:3}" || exit $?
+			length_newnew=0
+			for l in ${FLAGS_ARGV[@]}
+			do
+				length_newnew=$[$length_newnew+1]
+			done
+			if [ "$length_newnew" == "$length_old" ]; then
+				die "Too many arguments have been found!"
+			fi
+		fi
+	fi
+
 	# read arguments into global variables
 	VERSION=$1
 	BASE=$2
@@ -135,7 +192,7 @@ parse_args() {
 
 require_version_arg() {
 	if [ "$VERSION" = "" ]; then
-		warn "Missing argument <version>"
+		warn "Missing argument <name>"
 		usage
 		exit 1
 	fi
@@ -150,6 +207,7 @@ require_base_arg() {
 }
 
 require_base_is_on_master() {
+	echo "Executing Git command 'git branch --no-color --contains $BASE'"
 	if ! git branch --no-color --contains "$BASE" 2>/dev/null \
 			| sed 's/[* ] //g' \
 	  		| grep -q "^$MASTER_BRANCH\$"; then
@@ -158,27 +216,107 @@ require_base_is_on_master() {
 }
 
 cmd_start() {
-	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
+	DEFINE_boolean fetch true "fetch from $ORIGIN before performing local operation" F
 	parse_args "$@"
 	require_version_arg
 	require_base_arg
-	require_base_is_on_master
+#	require_base_is_on_master
 
 	# sanity checks
 	require_clean_working_tree
 
-	# fetch remote changes
+	# update the local repo with remote changes, if asked
 	if flag fetch; then
-		git_do fetch -q "$ORIGIN" "$BASE"
+		echo "Executing Git command 'git checkout $BASE'"
+		git_do checkout "$BASE" >/dev/null 2>&1 || \
+		  die "Could not check out $BASE."
+		echo "Executing Git command 'git fetch -q $ORIGIN $BASE'"
+		git_do fetch -q "$ORIGIN" "$BASE" >/dev/null 2>&1 || \
+		  die "Could not fetch $BASE from $ORIGIN."
+		echo "Executing Git command 'git merge --no-commit $ORIGIN/$BASE'"
+		git_do merge --no-commit "$ORIGIN/$BASE" >/dev/null 2>&1  || {
+		  echo "*******************************************************************************"
+		  die "WARNING: There were merge conflicts on $BASE. Resolve them using git mergetool."
+		}
+		echo "Executing Git command 'git push origin $BASE'"
+		git_do push origin "$BASE" >/dev/null 2>&1 || \
+		  die "Could not push to $BASE from $ORIGIN."
 	fi
 	require_branch_absent "$BRANCH"
+	echo "Executing Git command 'git remote update'"
+	git_do remote update >/dev/null 2>&1 || \
+	  die "Could not update remote branches from $ORIGIN."
+	echo "Executing Git command 'git remote prune origin'"
+	git_do remote prune origin >/dev/null 2>&1
+	require_branch_absent "$ORIGIN/$BRANCH"
 
-	# create branch
-	git_do checkout -b "$BRANCH" "$BASE"
+	# if the origin branch counterpart exists, assert that the local branch
+	# isn't behind it (to avoid unnecessary rebasing)
+	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
+		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+	fi
+
+	# create the local branch and the corresponding remote branch
+	echo "Executing Git command 'git checkout -b $BRANCH $BASE'"
+	if ! git_do checkout -b "$BRANCH" "$BASE" >/dev/null 2>&1; then
+		echo "Executing Git command 'git checkout -b $BRANCH $ORIGIN/$BASE'"
+		if ! git_do checkout -b "$BRANCH" "$ORIGIN/$BASE" >/dev/null 2>&1; then
+			die "Could not create support branch '$BRANCH'"
+		fi
+	else
+		echo "Executing Git command 'git push -u origin $BRANCH'"
+		git_do push -u origin "$BRANCH" >/dev/null 2>&1
+	fi
 
 	echo
 	echo "Summary of actions:"
 	echo "- A new branch '$BRANCH' was created, based on '$BASE'"
+	echo "- A new remote branch '$BRANCH' was created, based on the local one"
 	echo "- You are now on branch '$BRANCH'"
+	echo
+	echo "Now, start committing on the support version."
+	echo
+}
+
+cmd_delete() {
+	DEFINE_boolean local false "only delete the local branch" l
+	parse_args "$@"
+
+	# sanity checks
+#	require_branch "$BRANCH"
+	require_clean_working_tree
+
+	# change to branch develop
+	echo "Executing Git command 'git checkout $DEVELOP_BRANCH'"
+	git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+	  die "Could not check out $DEVELOP_BRANCH."
+
+	# delete local branch
+	echo "Executing Git command 'git branch -D $BRANCH'"
+	git_do branch -D "$BRANCH" >/dev/null 2>&1
+
+	if ! flag local; then
+		# make sure that the remote branch should be deleted as well
+		read -p "Are you sure that you want to delete the remote branch as well (Y/N)? " answer
+		if [ "$answer" == "y" ] || [ "$answer" == "Y" ] || [ "$answer" == "yes" ] || [ "$answer" == "Yes" ] || [ "$answer" == "YES" ]; then
+			# delete remote branch
+#			echo "Executing Git command 'git remote prune origin'"
+#			git_do remote prune origin >/dev/null 2>&1
+			echo "Executing Git command 'git push $ORIGIN :refs/heads/$BRANCH'"
+			git_do push "$ORIGIN" ":refs/heads/$BRANCH" >/dev/null 2>&1
+		else
+			answer="false"
+		fi
+	fi
+
+	echo
+	echo "Summary of actions:"
+	echo "- The local branch '$BRANCH' has been deleted"
+	if ! flag local; then
+		if [ "$answer" != "false" ]; then
+			echo "- The remote branch '$ORIGIN/$BRANCH' has been deleted"
+		fi
+	fi
+	echo "- You are now on branch '$DEVELOP_BRANCH'"
 	echo
 }

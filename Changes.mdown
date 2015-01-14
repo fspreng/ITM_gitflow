@@ -1,6 +1,125 @@
-0.4.2:
+1.0.0:
 -----
-Release date: **not yet**
+Release date: 2015/01/14
+
+* Created a [cheat sheet][4] for the ITM Gitflow script package and added it to
+  the corresponding Git repository. It provides detailed information on all
+  available subcommands/branch specifiers, branch actions, and accepted flags
+  and arguments. In addition, some background information on the underlying Git
+  branching model by Vincent Driessen and the characteristics of the ITM
+  Gitflow script, as well as some suggestions on how to get started with the
+  script and on the actual workflow, can be found on it.
+
+* Introduced additional ITM Gitflow subcommands:
+  - **clone**:
+    Clone an existing Git repository, perform an automated initialization
+    process for the ITM Gitflow script package, and modify the access
+    permissions of the cloned repository.
+
+  - **commit**:
+    Commit to both the local repository and the tracked remote repository at
+    once. As `git-flow commit` is based on the standard `git commit` command,
+    it accepts the same flags and arguments.
+
+  - **reset**:
+    Reset both the local repository and the tracked remote repository at once.
+    As `git-flow reset` is based on the standard `git reset command`, it
+    accepts the same flags and arguments.
+
+* Tags for upcoming versions (both releases and hotfixes) are now automatically
+  created if not provided by the user (please, note the versioning conventions
+  of the ITM Gitflow script).
+
+* Added possibility to modify the Gitflow base command that is used to invoke
+  the script, default is `git-flow`.
+
+* Extended and improved original git-flow subcommands:
+  - **all**:
+    - Enhanced action `list` to also take into account and, thus, list the
+      remote branches for a specific branch type.
+
+    - Always create a corresponding remote tracking branch when starting a
+      local one. For this reason, also the remote repository is checked for the
+      existence of a branch with the same name as the user-defined one.
+
+    - Set default value of flag `fetch` to `true`.
+
+    - Added action `delete`. It allows to delete a local branch and its remote
+      counterpart without having merged them into any other branch. Set flag
+      `l` when intending to delete only the local version of the branch and
+      keep the remote one.
+
+    - Finishing a branch is interrupted in case that another user has already
+      finished or deleted the remote version of it in order to avoid losing any
+      changes made to the local repository.
+
+  - **feature**:
+    - Added action `update`, which makes it easier for the user to merge the
+      latest version of a specified branch into the selected feature branch.
+
+  - **hotfix**:
+    - Changed default value of flag `push` from `false` to `true`.
+
+    - Restricted maximum number of existing hotfix branches to one.
+
+    - Hotfix branches are now named automatically by the ITM Gitflow script
+      based on the already assigned tags if no version number was specified by
+      the user.
+
+    - Added possibility to merge a hotfix branch into the develop branch and,
+      if available, a release branch, or into no other branch at all while
+      finishing. Anyway, hotfix branches will no longer be back-merged into the
+      master branch, but kept as dangling tags.
+
+  - **release**:
+    - Changed default value of flag `push` from `false` to `true`.
+
+    - Restricted maximum number of existing release branches to one.
+
+    - Release branches are now named automatically by the ITM Gitflow script
+      based on the already assigned tags. The necessary argument to be provided
+      for this is either `major` (first number of version tag is incremented)
+      or `minor` (second number of version tag is incremented).
+
+    - Added restriction that a release branch must be based on the current
+      develop branch.
+
+    - Added possibility to merge a release branch only into the master branch
+      and not into the develop branch while finishing.
+
+  - **support**:
+    - Further developed the concept of support branches.
+
+    - Removed restriction that a support branch must be based on the master
+      branch.
+
+* Added little [Pasimodo][5]-specific code.
+
+* Improved user feedback that is provided by the ITM Gitflow script, e.g., show
+  extended help messages in case that an error has been caught and reveal
+  executed Git commands to support new users in getting familiar with Git and
+  Gitflow.
+
+* Added new types of sanity checks. For instance, the number of provided
+  arguments is checked before executing a command, and exceptions and errors
+  that have not been treated in a proper way so far are now caught.
+
+* The ITM Gitflow script package now comes with the [git-completion][6]
+  extension for bash/zsh and tcsh (thanks to Shawn O. Pearce and Marc Khouzam).
+
+* Improved source code documentation.
+
+* Plenty of minor fixes.
+
+* Added MIT license.
+
+[4]: https://github.com/fspreng/ITM_gitflow/blob/develop/gitflow_cheat_sheet.pdf
+[5]: http://www.itm.uni-stuttgart.de/research/pasimodo/pasimodo_en.php
+[6]: https://github.com/git/git/tree/master/contrib/completion
+
+0.4.1_last:
+-----
+Release date: **2012/09/25**
 
 * `git flow init` now detects situations where origin already has gitflow
   branches set up, and behaves accordingly (thanks Emre Berge Ergenekon).
