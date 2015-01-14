@@ -110,7 +110,12 @@ cmd_default() {
 				fi
 			done
 		fi
-		
+
+		if [ -z $default_suggestion ] && flag defaults; then
+			should_check_existence=YES
+			default_suggestion=$(git config --get gitflow.branch.master || echo deploy)
+		fi
+
 		printf "Branch name for production releases: [$default_suggestion] "
 		if noflag defaults; then
 			read answer
@@ -164,12 +169,11 @@ cmd_default() {
 					break
 				fi
 			done
-			
-			if [ -z $default_suggestion ]; then
-				should_check_existence=NO
-				default_suggestion=$(git config --get gitflow.branch.develop || echo develop)
-			fi
-			
+		fi
+
+		if [ -z $default_suggestion ] && flag defaults; then
+			should_check_existence=YES
+			default_suggestion=$(git config --get gitflow.branch.develop || echo develop)
 		fi
 
 		printf "Branch name for \"next release\" development: [$default_suggestion] "
