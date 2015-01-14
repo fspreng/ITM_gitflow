@@ -1,6 +1,6 @@
 1.0.0:
 -----
-Release date: **not yet**
+Release date: 2015/01/14
 
 * Created a [cheat sheet][4] for the ITM Gitflow script package and added it to
   the corresponding Git repository. It provides detailed information on all
