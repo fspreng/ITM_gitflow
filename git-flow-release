@@ -309,8 +309,8 @@ cmd_start() {
 		echo "Executing Git command 'git checkout $DEVELOP_BRANCH'"
 		git_do checkout "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not check out $DEVELOP_BRANCH."
-		echo "Executing Git command 'git fetch -q $ORIGIN $DEVELOP_BRANCH'"
-		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+		echo "Executing Git command 'git fetch -q $ORIGIN $DEVELOP_BRANCH:refs/remotes/$ORIGIN/$DEVELOP_BRANCH'"
+		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH":refs/remotes/"$ORIGIN"/"$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
 		echo "Executing Git command 'git merge --no-commit $ORIGIN/$DEVELOP_BRANCH'"
 		git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1  || {
@@ -377,8 +377,8 @@ cmd_finish() {
 	echo "Executing Git command 'git checkout $BRANCH'"
 	git_do checkout "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not check out $BRANCH."
-	echo "Executing Git command 'git fetch -q $ORIGIN $BRANCH'"
-	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
+	echo "Executing Git command 'git fetch -q $ORIGIN $BRANCH:refs/remotes/$ORIGIN/$BRANCH'"
+	git_do fetch -q "$ORIGIN" "$BRANCH":refs/remotes/"$ORIGIN"/"$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not fetch $BRANCH from $ORIGIN."
 	echo "Executing Git command 'git remote prune origin'"
 	git_do remote prune origin >/dev/null 2>&1
@@ -394,19 +394,19 @@ cmd_finish() {
 	# branch $ORIGIN/$BRANCH should be existent, but check it anyway...
 	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
 		if flag fetch; then
-#			echo "Executing Git command 'git fetch -q $ORIGIN $BRANCH'"
-#			git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
+#			echo "Executing Git command 'git fetch -q $ORIGIN $BRANCH:refs/remotes/$ORIGIN/$BRANCH'"
+#			git_do fetch -q "$ORIGIN" "$BRANCH":refs/remotes/"$ORIGIN"/"$BRANCH" >/dev/null 2>&1 || \
 #			  die "Could not fetch $BRANCH from $ORIGIN."
 			echo "Executing Git command 'git checkout $MASTER_BRANCH'"
 			git_do checkout "$MASTER_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not check out $MASTER_BRANCH."
 			# Basically, the additional fetch is not necessary, but can be useful when the
 			# subsequent pull fails
-			echo "Executing Git command 'git fetch -q $ORIGIN $MASTER_BRANCH'"
-			git_do fetch -q "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || \
+			echo "Executing Git command 'git fetch -q $ORIGIN $MASTER_BRANCH:refs/remotes/$ORIGIN/$MASTER_BRANCH'"
+			git_do fetch -q "$ORIGIN" "$MASTER_BRANCH":refs/remotes/"$ORIGIN"/"$MASTER_BRANCH" >/dev/null 2>&1 || \
 			  die "Could not fetch $MASTER_BRANCH from $ORIGIN."
-			echo "Executing Git command 'git pull -q --no-commit $ORIGIN $MASTER_BRANCH'"
-			git_do pull -q --no-commit "$ORIGIN" "$MASTER_BRANCH" >/dev/null 2>&1 || {
+			echo "Executing Git command 'git pull -q --no-commit $ORIGIN $MASTER_BRANCH:refs/remotes/$ORIGIN/$MASTER_BRANCH'"
+			git_do pull -q --no-commit "$ORIGIN" "$MASTER_BRANCH":refs/remotes/"$ORIGIN"/"$MASTER_BRANCH" >/dev/null 2>&1 || {
 			  echo "****************************************************************************************"
 			  die "WARNING: There were merge conflicts on $MASTER_BRANCH. Resolve them using git mergetool."
 			}
@@ -492,11 +492,11 @@ cmd_finish() {
 		  die "Could not check out $DEVELOP_BRANCH."
 		# Basically, the additional fetch is not necessary, but can be useful when the
 		# subsequent pull fails
-		echo "Executing Git command 'git fetch -q $ORIGIN $DEVELOP_BRANCH'"
-		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || \
+		echo "Executing Git command 'git fetch -q $ORIGIN $DEVELOP_BRANCH:refs/remotes/$ORIGIN/$DEVELOP_BRANCH'"
+		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH":refs/remotes/"$ORIGIN"/"$DEVELOP_BRANCH" >/dev/null 2>&1 || \
 		  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
-		echo "Executing Git command 'git pull -q --no-commit $ORIGIN $DEVELOP_BRANCH'"
-		git_do pull -q --no-commit "$ORIGIN" "$DEVELOP_BRANCH" >/dev/null 2>&1 || {
+		echo "Executing Git command 'git pull -q --no-commit $ORIGIN $DEVELOP_BRANCH:refs/remotes/$ORIGIN/$DEVELOP_BRANCH'"
+		git_do pull -q --no-commit "$ORIGIN" "$DEVELOP_BRANCH":refs/remotes/"$ORIGIN"/"$DEVELOP_BRANCH" >/dev/null 2>&1 || {
 		  echo "*****************************************************************************************"
 		  die "WARNING: There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
 		}

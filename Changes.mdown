@@ -2,7 +2,10 @@
 -----
 Release date: **not yet**
 
-* Fixed unix installer to use SSL and clone shFlags (by msiroskey)
+* Fetches for <branch> from <origin> are no longer stored in FETCH_HEAD, but in
+  refs/remotes/<origin>/<branch>.
+
+* Fixed unix installer to use SSL and clone shFlags (by msiroskey).
 
 1.0.0:
 -----

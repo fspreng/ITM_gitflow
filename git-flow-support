@@ -230,8 +230,8 @@ cmd_start() {
 		echo "Executing Git command 'git checkout $BASE'"
 		git_do checkout "$BASE" >/dev/null 2>&1 || \
 		  die "Could not check out $BASE."
-		echo "Executing Git command 'git fetch -q $ORIGIN $BASE'"
-		git_do fetch -q "$ORIGIN" "$BASE" >/dev/null 2>&1 || \
+		echo "Executing Git command 'git fetch -q $ORIGIN $BASE:refs/remotes/$ORIGIN/$BASE'"
+		git_do fetch -q "$ORIGIN" "$BASE":refs/remotes/"$ORIGIN"/"$BASE" >/dev/null 2>&1 || \
 		  die "Could not fetch $BASE from $ORIGIN."
 		echo "Executing Git command 'git merge --no-commit $ORIGIN/$BASE'"
 		git_do merge --no-commit "$ORIGIN/$BASE" >/dev/null 2>&1  || {

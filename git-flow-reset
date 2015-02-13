@@ -29,8 +29,8 @@ cmd_default() {
 	echo "Executing Git command 'git reset $@'"
 	git_do reset "$@" >/dev/null 2>&1 || \
 	  die "Could not reset HEAD of local repository $BRANCH."
-	echo "Executing Git command 'git fetch -q $ORIGIN $BRANCH'"
-	git_do fetch -q "$ORIGIN" "$BRANCH" >/dev/null 2>&1 || \
+	echo "Executing Git command 'git fetch -q $ORIGIN $BRANCH:refs/remotes/$ORIGIN/$BRANCH'"
+	git_do fetch -q "$ORIGIN" "$BRANCH":refs/remotes/"$ORIGIN"/"$BRANCH" >/dev/null 2>&1 || \
 #	echo "Executing Git command 'git remote prune origin'"
 #	  git_do remote prune origin >/dev/null 2>&1 && die "Could not fetch $BRANCH from $ORIGIN."
 	  die "Could not fetch $BRANCH from $ORIGIN. ('git remote prune origin' could be useful)"
