@@ -757,15 +757,15 @@ cmd_pull() {
 				exit 1
 			fi
 		else
-			echo "Executing Git command 'git pull -q $REMOTE $BRANCH:refs/remotes/$REMOTE/$BRANCH'"
-			git_do pull -q "$REMOTE" "$BRANCH":refs/remotes/"$REMOTE"/"$BRANCH" || die "Failed to pull from remote '$REMOTE'."
+			echo "Executing Git command 'git pull -q $REMOTE $BRANCH'"
+			git_do pull -q "$REMOTE" "$BRANCH" || die "Failed to pull from remote '$REMOTE'."
 		fi
 
 		echo "Pulled $REMOTE's changes into $BRANCH."
 	else
 		# set up the local branch clone for the first time
-		echo "Executing Git command 'git fetch -q $REMOTE $BRANCH:refs/remotes/$REMOTE/$BRANCH'"
-		git_do fetch -q "$REMOTE" "$BRANCH":refs/remotes/"$REMOTE"/"$BRANCH" || die "Fetch failed."     # stores in FETCH_HEAD
+		echo "Executing Git command 'git fetch -q $REMOTE $BRANCH'"
+		git_do fetch -q "$REMOTE" "$BRANCH" || die "Fetch failed."     # stores in FETCH_HEAD
 		echo "Executing Git command 'git branch --no-track $BRANCH FETCH_HEAD'"
 		git_do branch --no-track "$BRANCH" FETCH_HEAD || die "Branch failed."
 		echo "Executing Git command 'git checkout -q $BRANCH'"
