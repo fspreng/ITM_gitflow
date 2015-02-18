@@ -7,6 +7,9 @@ Release date: **not yet**
 
 * Fixed unix installer to use SSL and clone shFlags (by msiroskey).
 
+* All branch specifiers are now able to handle branch names that already provide
+  the branch prefix.
+
 1.0.0:
 -----
 Release date: 2015/01/14

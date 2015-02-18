@@ -115,7 +115,7 @@ cmd_list() {
 				printf "  "
 			fi
 			if flag verbose; then
-				printf "%-${width}s" "$branch"
+				printf "%-${width}s" "$PREFIX$branch"
 				if [ "$branch_sha" = "$develop_sha" ]; then
 					printf "(no commits yet)"
 				else
@@ -186,6 +186,11 @@ parse_args() {
 
 	# read arguments into global variables
 	VERSION=$1
+	# check whether the user has already added the branch prefix or not
+	if { echo "$VERSION" | grep -q "^$PREFIX"; } then
+		local len=${#PREFIX}
+		VERSION=${VERSION:$len}
+	fi
 	BASE=$2
 	BRANCH=$PREFIX$VERSION
 }
