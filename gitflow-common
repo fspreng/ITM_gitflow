@@ -73,6 +73,11 @@ endswith() { [ "$1" != "${1%$2}" ]; }
 flag() { local FLAG; eval FLAG='$FLAGS_'$1; [ $FLAG -eq $FLAGS_TRUE ]; }
 noflag() { local FLAG; eval FLAG='$FLAGS_'$1; [ $FLAG -ne $FLAGS_TRUE ]; }
 
+# basic check for existence and accessibility of a directory
+assert_dir_existence_and_access() { 
+    (cd ${1:?pathname expected}) >/dev/null 2>&1
+}
+
 #
 # Git specific common functionality
 #

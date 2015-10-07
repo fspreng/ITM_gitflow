@@ -302,6 +302,10 @@ cmd_start() {
 	git_do remote prune origin >/dev/null 2>&1
 	require_branch_absent "$ORIGIN/$BRANCH"
 
+	# temporarily changing to root directory of git repository
+	echo "Changing to root directory of Git repository"
+	cd "$(git rev-parse --show-cdup)"
+
 	# update the local repo with remote changes, if asked
 	if flag fetch; then
 		echo "Executing Git command 'git checkout $BASE'"
@@ -313,6 +317,13 @@ cmd_start() {
 		echo "Executing Git command 'git merge --no-commit $ORIGIN/$BASE'"
 		git_do merge --no-commit "$ORIGIN/$BASE" >/dev/null 2>&1  || {
 		  echo "*******************************************************************************"
+		  # return to previous working directory if available
+		  if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+		  	echo "Returning to previous working directory"
+		  	cd "$OLDPWD"
+		  else
+		  	echo "Previous working directory no longer available, staying in root directory of Git repository"
+		  fi
 		  die "WARNING: There were merge conflicts on $BASE. Resolve them using git mergetool."
 		}
 		echo "Executing Git command 'git push origin $BASE'"
@@ -334,6 +345,14 @@ cmd_start() {
 		echo "Executing Git command 'git push -u origin $BRANCH'"
 		git_do push -u origin "$BRANCH" >/dev/null 2>&1 || \
 		  die "Could not push to $BRANCH from $ORIGIN."
+	fi
+
+	# return to previous working directory if available
+	if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+		echo "Returning to previous working directory"
+		cd "$OLDPWD"
+	else
+		echo "Previous working directory no longer available, staying in root directory of Git repository"
 	fi
 
 	echo
@@ -361,6 +380,11 @@ cmd_finish() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch "$BRANCH"
+	
+	# temporarily changing to root directory of git repository
+	echo "Changing to root directory of Git repository"
+	cd "$(git rev-parse --show-cdup)"
+	
 	echo "Executing Git command 'git checkout $BRANCH'"
 	git_do checkout "$BRANCH" >/dev/null 2>&1 || \
 	  die "Could not check out $BRANCH."
@@ -373,6 +397,13 @@ cmd_finish() {
 	echo "Executing Git command 'git merge --no-commit $ORIGIN/$BRANCH'"
 	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1 || {
 	  echo "*********************************************************************************"
+	  # return to previous working directory if available
+	  if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+	  	echo "Returning to previous working directory"
+	  	cd "$OLDPWD"
+	  else
+	  	echo "Previous working directory no longer available, staying in root directory of Git repository"
+	  fi
 	  die "WARNING: There were merge conflicts on $BRANCH. Resolve them using git mergetool."
 	}
 	echo "Executing Git command 'git push origin $BRANCH'"
@@ -399,6 +430,13 @@ cmd_finish() {
 			if git_is_branch_merged_into "$BRANCH" "$FINISH_BASE"; then
 				rm -f "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
 				helper_finish_cleanup
+				# return to previous working directory if available
+				if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+					echo "Returning to previous working directory"
+					cd "$OLDPWD"
+				else
+					echo "Previous working directory no longer available, staying in root directory of Git repository"
+				fi
 				exit 0
 			else
 				# If the user cancelled the merge and decided to wait until later,
@@ -407,6 +445,14 @@ cmd_finish() {
 				rm -f "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
 			fi
 		else
+			# return to previous working directory if available
+			if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+				echo "Returning to previous working directory"
+				cd "$OLDPWD"
+			else
+				echo "Previous working directory no longer available, staying in root directory of Git repository"
+			fi
+
 			echo
 			echo "Merge conflicts not resolved yet, use:"
 			echo "    git mergetool"
@@ -439,11 +485,25 @@ cmd_finish() {
 			echo "Executing Git command 'git pull -q --no-commit $ORIGIN $DEVELOP_BRANCH:refs/remotes/$ORIGIN/$DEVELOP_BRANCH'"
 			git_do pull -q --no-commit "$ORIGIN" "$DEVELOP_BRANCH":refs/remotes/"$ORIGIN"/"$DEVELOP_BRANCH" >/dev/null 2>&1 || {
 			  echo "*****************************************************************************************"
+			  # return to previous working directory if available
+			  if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+			  	echo "Returning to previous working directory"
+			  	cd "$OLDPWD"
+			  else
+			  	echo "Previous working directory no longer available, staying in root directory of Git repository"
+			  fi
 			  die "WARNING: There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
 			}
 #			echo "Executing Git command 'git merge --no-commit $ORIGIN/$DEVELOP_BRANCH'"
 #			git_do merge --no-commit "$ORIGIN/$DEVELOP_BRANCH" >/dev/null 2>&1 || {
 #			  echo "*****************************************************************************************"
+#			  # return to previous working directory if available
+#			  if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+#			  	echo "Returning to previous working directory"
+#			  	cd "$OLDPWD"
+#			  else
+#			  	echo "Previous working directory no longer available, staying in root directory of Git repository"
+#			  fi
 #			  die "WARNING: There were merge conflicts on $DEVELOP_BRANCH. Resolve them using git mergetool."
 #			}
 			echo "Executing Git command 'git push origin $DEVELOP_BRANCH'"
@@ -462,6 +522,14 @@ cmd_finish() {
 	# if the user wants to rebase, do that first
 	if flag rebase; then
 		if ! git-flow feature rebase "$NAME" "$DEVELOP_BRANCH"; then
+			# return to previous working directory if available
+			if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+				echo "Returning to previous working directory"
+				cd "$OLDPWD"
+			else
+				echo "Previous working directory no longer available, staying in root directory of Git repository"
+			fi
+
 			warn "Finish was aborted due to conflicts during rebase."
 			warn "Please finish the rebase manually now."
 			warn "When finished, re-run:"
@@ -493,6 +561,14 @@ cmd_finish() {
 	fi
 
 	if [ $? -ne 0 ]; then
+		# return to previous working directory if available
+		if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+			echo "Returning to previous working directory"
+			cd "$OLDPWD"
+		else
+			echo "Previous working directory no longer available, staying in root directory of Git repository"
+		fi
+
 		# oops.. we have a merge conflict!
 		# write the given $DEVELOP_BRANCH to a temporary file (we need it later)
 		mkdir -p "$DOT_GIT_DIR/.gitflow"
@@ -543,6 +619,14 @@ helper_finish_cleanup() {
 		fi
 	fi
 
+	# return to previous working directory if available
+	if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+		echo "Returning to previous working directory"
+		cd "$OLDPWD"
+	else
+		echo "Previous working directory no longer available, staying in root directory of Git repository"
+	fi
+
 	echo
 	echo "Summary of actions:"
 	echo "- The feature branch '$BRANCH' was merged into '$DEVELOP_BRANCH'"
@@ -563,6 +647,10 @@ cmd_delete() {
 	# sanity checks
 #	require_branch "$BRANCH"
 	require_clean_working_tree
+
+	# temporarily changing to root directory of git repository
+	echo "Changing to root directory of Git repository"
+	cd "$(git rev-parse --show-cdup)"
 
 	# change to branch develop
 	echo "Executing Git command 'git checkout $DEVELOP_BRANCH'"
@@ -587,6 +675,14 @@ cmd_delete() {
 		fi
 	fi
 
+	# return to previous working directory if available
+	if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+		echo "Returning to previous working directory"
+		cd "$OLDPWD"
+	else
+		echo "Previous working directory no longer available, staying in root directory of Git repository"
+	fi
+
 	echo
 	echo "Summary of actions:"
 	echo "- The local branch '$BRANCH' has been deleted"
@@ -606,6 +702,7 @@ cmd_publish() {
 	# sanity checks
 	require_clean_working_tree
 	require_branch "$BRANCH"
+
 	echo "Executing Git command 'git fetch -q $ORIGIN'"
 	git_do fetch -q "$ORIGIN" >/dev/null 2>&1 || \
 	  die "Could not fetch from $ORIGIN."
@@ -620,6 +717,10 @@ cmd_publish() {
 	git_do fetch -q "$ORIGIN" >/dev/null 2>&1 || \
 	  die "Could not fetch from $ORIGIN."
 
+	# temporarily changing to root directory of git repository
+	echo "Changing to root directory of Git repository"
+	cd "$(git rev-parse --show-cdup)"
+
 	# configure remote tracking
 	echo "Executing Git command 'git config branch.$BRANCH.remote $ORIGIN'"
 	git_do config "branch.$BRANCH.remote" "$ORIGIN" >/dev/null 2>&1
@@ -627,6 +728,14 @@ cmd_publish() {
 	git_do config "branch.$BRANCH.merge" "refs/heads/$BRANCH" >/dev/null 2>&1
 	echo "Executing Git command 'git checkout $BRANCH'"
 	git_do checkout "$BRANCH" >/dev/null 2>&1
+
+	# return to previous working directory if available
+	if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+		echo "Returning to previous working directory"
+		cd "$OLDPWD"
+	else
+		echo "Previous working directory no longer available, staying in root directory of Git repository"
+	fi
 
 	echo
 	echo "Summary of actions:"
@@ -651,9 +760,21 @@ cmd_track() {
 	git_do remote prune origin >/dev/null 2>&1
 	require_branch "$ORIGIN/$BRANCH"
 
+	# temporarily changing to root directory of git repository
+	echo "Changing to root directory of Git repository"
+	cd "$(git rev-parse --show-cdup)"
+
 	# create tracking branch
 	echo "Executing Git command 'git checkout -b $BRANCH $ORIGIN/$BRANCH'"
 	git_do checkout -b "$BRANCH" "$ORIGIN/$BRANCH" >/dev/null 2>&1
+
+	# return to previous working directory if available
+	if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+		echo "Returning to previous working directory"
+		cd "$OLDPWD"
+	else
+		echo "Previous working directory no longer available, staying in root directory of Git repository"
+	fi
 
 	echo
 	echo "Summary of actions:"
@@ -684,8 +805,21 @@ cmd_checkout() {
 
 	if [ "$NAME" != "" ]; then
 		expand_nameprefix_arg
+		
+		# temporarily changing to root directory of git repository
+		echo "Changing to root directory of Git repository"
+		cd "$(git rev-parse --show-cdup)"
+
 		echo "Executing Git command 'git checkout $BRANCH'"
 		git_do checkout "$BRANCH"
+
+		# return to previous working directory if available
+		if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+			echo "Returning to previous working directory"
+			cd "$OLDPWD"
+		else
+			echo "Previous working directory no longer available, staying in root directory of Git repository"
+		fi
 	else
 		die "Name a feature branch explicitly."
 	fi
@@ -707,6 +841,10 @@ cmd_rebase() {
 	  die "Could not fetch from $ORIGIN."
 	require_branch "$BRANCH"
 
+	# temporarily changing to root directory of git repository
+	echo "Changing to root directory of Git repository"
+	cd "$(git rev-parse --show-cdup)"
+
 	echo "Executing Git command 'git checkout -q $BRANCH'"
 	git_do checkout -q "$BRANCH"
 	local OPTS=
@@ -715,6 +853,14 @@ cmd_rebase() {
 	fi
 	echo "Executing Git command 'git rebase $OPTS $DEVELOP_BRANCH'"
 	git_do rebase $OPTS "$DEVELOP_BRANCH"
+
+	# return to previous working directory if available
+	if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+		echo "Returning to previous working directory"
+		cd "$OLDPWD"
+	else
+		echo "Previous working directory no longer available, staying in root directory of Git repository"
+	fi
 }
 
 avoid_accidental_cross_branch_action() {
@@ -773,9 +919,22 @@ cmd_pull() {
 		git_do fetch -q "$REMOTE" "$BRANCH" || die "Fetch failed."     # stores in FETCH_HEAD
 		echo "Executing Git command 'git branch --no-track $BRANCH FETCH_HEAD'"
 		git_do branch --no-track "$BRANCH" FETCH_HEAD || die "Branch failed."
+
+		# temporarily changing to root directory of git repository
+		echo "Changing to root directory of Git repository"
+		cd "$(git rev-parse --show-cdup)"
+
 		echo "Executing Git command 'git checkout -q $BRANCH'"
 		git_do checkout -q "$BRANCH" || die "Checking out new local branch failed."
 		echo "Created local branch $BRANCH based on $REMOTE's $BRANCH."
+
+		# return to previous working directory if available
+		if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+			echo "Returning to previous working directory"
+			cd "$OLDPWD"
+		else
+			echo "Previous working directory no longer available, staying in root directory of Git repository"
+		fi
 	fi
 }
 
@@ -791,6 +950,10 @@ cmd_update() {
 		base="$2"
 	fi
 
+	# temporarily changing to root directory of git repository
+	echo "Changing to root directory of Git repository"
+	cd "$(git rev-parse --show-cdup)"
+
 	echo "Executing Git command 'git checkout $base'"
 	git_do checkout "$base" >/dev/null 2>&1 || \
 	  die "Could not check out $base."
@@ -802,6 +965,13 @@ cmd_update() {
 	echo "Executing Git command 'git merge --no-commit $ORIGIN/$base'"
 	git_do merge --no-commit "$ORIGIN/$base" >/dev/null 2>&1  || {
 	  echo "*******************************************************************************"
+	  # return to previous working directory if available
+	  if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+	  	echo "Returning to previous working directory"
+	  	cd "$OLDPWD"
+	  else
+	  	echo "Previous working directory no longer available, staying in root directory of Git repository"
+	  fi
 	  die "WARNING: There were merge conflicts on $base. Resolve them using git mergetool."
 	}
 	echo "Executing Git command 'git push origin $base'"
@@ -817,6 +987,13 @@ cmd_update() {
 	echo "Executing Git command 'git merge --no-commit $ORIGIN/$BRANCH'"
 	git_do merge --no-commit "$ORIGIN/$BRANCH" >/dev/null 2>&1  || {
 	  echo "*********************************************************************************"
+	  # return to previous working directory if available
+	  if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+	  	echo "Returning to previous working directory"
+	  	cd "$OLDPWD"
+	  else
+	  	echo "Previous working directory no longer available, staying in root directory of Git repository"
+	  fi
 	  die "WARNING: There were merge conflicts on $BRANCH. Resolve them using git mergetool."
 	}
 	require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
@@ -824,12 +1001,27 @@ cmd_update() {
 		echo "Executing Git command 'git merge --no-ff $base'"
 		git_do merge --no-ff "$base" >/dev/null 2>&1 || {
 		  echo "*********************************************************************************"
+		  # return to previous working directory if available
+		  if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+		  	echo "Returning to previous working directory"
+		  	cd "$OLDPWD"
+		  else
+		  	echo "Previous working directory no longer available, staying in root directory of Git repository"
+		  fi
 		  die "WARNING: There were merge conflicts on $BRANCH. Resolve them using git mergetool."
 		}
 		  # TODO: What do we do now?
 		echo "Executing Git command 'git push origin $BRANCH'"
 		git_do push origin "$BRANCH" >/dev/null 2>&1 || \
 		  die "Could not push to $BRANCH from $ORIGIN."
+	fi
+
+	# return to previous working directory if available
+	if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+		echo "Returning to previous working directory"
+		cd "$OLDPWD"
+	else
+		echo "Previous working directory no longer available, staying in root directory of Git repository"
 	fi
 
 	echo

@@ -10,6 +10,10 @@ Release date: **not yet**
 * All branch specifiers are now able to handle branch names that already provide
   the branch prefix.
 
+* Resolved problems encountered when the current working directory does not
+  exist on the branch to be checked out, e.g. while finishing a feature branch,
+  by temporarily changing into the root directory of the Git repository
+
 1.0.0:
 -----
 Release date: 2015/01/14

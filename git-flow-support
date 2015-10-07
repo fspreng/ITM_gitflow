@@ -230,6 +230,10 @@ cmd_start() {
 	# sanity checks
 	require_clean_working_tree
 
+	# temporarily changing to root directory of git repository
+	echo "Changing to root directory of Git repository"
+	cd "$(git rev-parse --show-cdup)"
+
 	# update the local repo with remote changes, if asked
 	if flag fetch; then
 		echo "Executing Git command 'git checkout $BASE'"
@@ -241,6 +245,13 @@ cmd_start() {
 		echo "Executing Git command 'git merge --no-commit $ORIGIN/$BASE'"
 		git_do merge --no-commit "$ORIGIN/$BASE" >/dev/null 2>&1  || {
 		  echo "*******************************************************************************"
+		  # return to previous working directory if available
+		  if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+		  	echo "Returning to previous working directory"
+		  	cd "$OLDPWD"
+		  else
+		  	echo "Previous working directory no longer available, staying in root directory of Git repository"
+		  fi
 		  die "WARNING: There were merge conflicts on $BASE. Resolve them using git mergetool."
 		}
 		echo "Executing Git command 'git push origin $BASE'"
@@ -273,6 +284,14 @@ cmd_start() {
 		git_do push -u origin "$BRANCH" >/dev/null 2>&1
 	fi
 
+	# return to previous working directory if available
+	if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+		echo "Returning to previous working directory"
+		cd "$OLDPWD"
+	else
+		echo "Previous working directory no longer available, staying in root directory of Git repository"
+	fi
+
 	echo
 	echo "Summary of actions:"
 	echo "- A new branch '$BRANCH' was created, based on '$BASE'"
@@ -290,6 +309,10 @@ cmd_delete() {
 	# sanity checks
 #	require_branch "$BRANCH"
 	require_clean_working_tree
+
+	# temporarily changing to root directory of git repository
+	echo "Changing to root directory of Git repository"
+	cd "$(git rev-parse --show-cdup)"
 
 	# change to branch develop
 	echo "Executing Git command 'git checkout $DEVELOP_BRANCH'"
@@ -312,6 +335,14 @@ cmd_delete() {
 		else
 			answer="false"
 		fi
+	fi
+
+	# return to previous working directory if available
+	if assert_dir_existence_and_access "$OLDPWD" >/dev/null 2>&1; then
+		echo "Returning to previous working directory"
+		cd "$OLDPWD"
+	else
+		echo "Previous working directory no longer available, staying in root directory of Git repository"
 	fi
 
 	echo
